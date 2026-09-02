@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MINA · Administración</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<header class="topbar">
+  <div class="topbar__brand">MINA<em>administración del emprendimiento</em></div>
+  <div class="topbar__fecha" id="fecha-hoy"></div>
+</header>
+
+<main>
+
+  <!-- ===================== PANEL ===================== -->
+  <section class="seccion activa" id="seccion-panel">
+    <h1 class="seccion__titulo">Panel</h1>
+    <p class="seccion__subtitulo">Así viene el emprendimiento en el período elegido</p>
+
+    <div class="filtros-fecha" id="filtros-panel"></div>
+    <div class="filtros-personalizado oculto" id="filtros-personalizado-panel">
+      <input type="date" id="panel-fecha-desde">
+      <input type="date" id="panel-fecha-hasta">
+    </div>
+
+    <div class="grid-panel">
+      <div class="card-metrica card-metrica--ganancia card-metrica--ancha">
+        <div class="card-metrica__label">Ganancia neta</div>
+        <div class="card-metrica__valor" id="panel-ganancia">$0</div>
+      </div>
+      <div class="card-metrica card-metrica--ingreso">
+        <div class="card-metrica__label">Ingresos (ventas)</div>
+        <div class="card-metrica__valor" id="panel-ingresos">$0</div>
+      </div>
+      <div class="card-metrica card-metrica--egreso">
+        <div class="card-metrica__label">Egresos totales</div>
+        <div class="card-metrica__valor" id="panel-egresos">$0</div>
+      </div>
+      <div class="card-metrica">
+        <div class="card-metrica__label">Gastado en compras</div>
+        <div class="card-metrica__valor" id="panel-compras">$0</div>
+      </div>
+      <div class="card-metrica">
+        <div class="card-metrica__label">Gastos generales</div>
+        <div class="card-metrica__valor" id="panel-gastos">$0</div>
+      </div>
+      <div class="card-metrica">
+        <div class="card-metrica__label">Prendas vendidas</div>
+        <div class="card-metrica__valor" id="panel-cant-ventas">0</div>
+      </div>
+      <div class="card-metrica">
+        <div class="card-metrica__label">Dinero disponible</div>
+        <div class="card-metrica__valor" id="panel-disponible">$0</div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card__titulo">Stock bajo</div>
+      <div class="lista" id="panel-stock-bajo"></div>
+    </div>
+  </section>
+
+  <!-- ===================== VENTAS ===================== -->
+  <section class="seccion" id="seccion-ventas">
+    <h1 class="seccion__titulo">Ventas</h1>
+    <p class="seccion__subtitulo">Registrá cada venta y descontá stock automáticamente</p>
+
+    <form class="form-card" id="form-venta">
+      <div class="form-card__titulo">Nueva venta</div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Fecha</label>
+          <input type="date" id="venta-fecha" required>
+        </div>
+        <div class="campo">
+          <label>Medio de pago</label>
+          <select id="venta-medio-pago">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Prenda vendida</label>
+        <select id="venta-prenda" required></select>
+      </div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Cantidad</label>
+          <input type="number" id="venta-cantidad" min="1" value="1" required>
+        </div>
+        <div class="campo">
+          <label>Precio de venta (unidad)</label>
+          <input type="number" id="venta-precio" min="0" step="1" required>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Costo de envío (opcional)</label>
+        <input type="number" id="venta-envio" min="0" step="1" value="0">
+      </div>
+      <div class="info-costo oculto" id="venta-info-ganancia"></div>
+      <button type="submit" class="btn btn--primario">Registrar venta</button>
+    </form>
+
+    <div class="lista" id="lista-ventas"></div>
+  </section>
+
+  <!-- ===================== GASTOS ===================== -->
+  <section class="seccion" id="seccion-gastos">
+    <h1 class="seccion__titulo">Gastos</h1>
+    <p class="seccion__subtitulo">Gastos generales del emprendimiento (no ligados a una prenda puntual)</p>
+
+    <form class="form-card" id="form-gasto">
+      <div class="form-card__titulo">Nuevo gasto</div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Fecha</label>
+          <input type="date" id="gasto-fecha" required>
+        </div>
+        <div class="campo">
+          <label>Categoría</label>
+          <select id="gasto-categoria">
+            <option value="packaging">Packaging</option>
+            <option value="etiquetas">Etiquetas / bolsas</option>
+            <option value="publicidad">Publicidad</option>
+            <option value="envios">Envíos</option>
+            <option value="insumos">Insumos</option>
+            <option value="servicios">Servicios</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Descripción</label>
+        <input type="text" id="gasto-descripcion" placeholder="Ej: bolsas de papel x100" required>
+      </div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Monto</label>
+          <input type="number" id="gasto-monto" min="0" step="1" required>
+        </div>
+        <div class="campo">
+          <label>Medio de pago</label>
+          <select id="gasto-medio-pago">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Observación (opcional)</label>
+        <input type="text" id="gasto-observacion">
+      </div>
+      <button type="submit" class="btn btn--primario">Registrar gasto</button>
+    </form>
+
+    <div class="lista" id="lista-gastos"></div>
+  </section>
+
+  <!-- ===================== COMPRAS / STOCK ===================== -->
+  <section class="seccion" id="seccion-compras">
+    <h1 class="seccion__titulo">Compras de mercadería</h1>
+    <p class="seccion__subtitulo">Cada compra suma stock automáticamente a la prenda elegida</p>
+
+    <form class="form-card" id="form-compra">
+      <div class="form-card__titulo">Nueva compra</div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Fecha</label>
+          <input type="date" id="compra-fecha" required>
+        </div>
+        <div class="campo">
+          <label>Proveedor</label>
+          <input type="text" id="compra-proveedor" placeholder="Opcional">
+        </div>
+      </div>
+      <div class="campo">
+        <label>Prenda</label>
+        <select id="compra-prenda" required></select>
+      </div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Cantidad</label>
+          <input type="number" id="compra-cantidad" min="1" required>
+        </div>
+        <div class="campo">
+          <label>Costo total de la compra</label>
+          <input type="number" id="compra-costo-total" min="0" step="1" required>
+        </div>
+      </div>
+      <div class="info-costo oculto" id="compra-info-unitario"></div>
+      <div class="campo">
+        <label class="chk-linea">
+          <input type="checkbox" id="compra-pagado" checked>
+          Ya está pagada
+        </label>
+      </div>
+      <button type="submit" class="btn btn--primario">Registrar compra</button>
+    </form>
+
+    <div class="lista" id="lista-compras"></div>
+  </section>
+
+  <!-- ===================== PRENDAS ===================== -->
+  <section class="seccion" id="seccion-prendas">
+    <h1 class="seccion__titulo">Prendas</h1>
+    <p class="seccion__subtitulo">Estructura de costos, precio de venta y stock de cada producto</p>
+
+    <button class="btn btn--primario" id="btn-nueva-prenda" style="margin-bottom:16px;">+ Nueva prenda</button>
+
+    <div class="grid-prendas" id="grid-prendas"></div>
+  </section>
+
+  <!-- ===================== MOVIMIENTOS ===================== -->
+  <section class="seccion" id="seccion-movimientos">
+    <h1 class="seccion__titulo">Movimientos</h1>
+    <p class="seccion__subtitulo">Ventas, compras y gastos juntos, ordenados por fecha</p>
+
+    <div class="filtros-fecha" id="filtros-movimientos"></div>
+    <div class="filtros-personalizado oculto" id="filtros-personalizado-movimientos">
+      <input type="date" id="mov-fecha-desde">
+      <input type="date" id="mov-fecha-hasta">
+    </div>
+
+    <div class="lista" id="lista-movimientos"></div>
+  </section>
+
+</main>
+
+<!-- ===================== MODAL: FICHA DE PRENDA ===================== -->
+<div class="modal-fondo oculto" id="modal-prenda">
+  <div class="modal">
+    <div class="modal__cabecera">
+      <h2 id="modal-prenda-titulo">Nueva prenda</h2>
+      <button class="modal__cerrar" id="modal-prenda-cerrar">✕</button>
+    </div>
+    <form id="form-prenda">
+      <input type="hidden" id="prenda-id">
+      <div class="campo">
+        <label>Imagen</label>
+        <input type="file" id="prenda-imagen" accept="image/*">
+        <img id="prenda-imagen-preview" style="width:100%;border-radius:10px;margin-top:8px;display:none;">
+      </div>
+      <div class="campo">
+        <label>Nombre de la prenda</label>
+        <input type="text" id="prenda-nombre" placeholder="Ej: Remera oversize negra" required>
+      </div>
+      <div class="campo">
+        <label>Precio al que la compré (por unidad)</label>
+        <input type="number" id="prenda-precio-compra" min="0" step="1" required>
+      </div>
+      <div class="fila-2">
+        <div class="campo">
+          <label>Bolsa</label>
+          <input type="number" id="prenda-costo-bolsa" min="0" step="1" value="0">
+        </div>
+        <div class="campo">
+          <label>Etiqueta</label>
+          <input type="number" id="prenda-costo-etiqueta" min="0" step="1" value="0">
+        </div>
+      </div>
+      <div class="campo">
+        <label>Otros costos (packaging, etc.)</label>
+        <input type="number" id="prenda-costo-otros" min="0" step="1" value="0">
+      </div>
+      <div class="info-costo" id="prenda-info-costo">Costo total: <b>$0</b></div>
+      <div class="campo">
+        <label>Precio al que la voy a vender</label>
+        <input type="number" id="prenda-precio-venta" min="0" step="1" required>
+      </div>
+      <div class="info-costo" id="prenda-info-ganancia">Ganancia: <b>$0</b> · Margen: <b>0%</b></div>
+      <div class="campo">
+        <label>Stock disponible</label>
+        <input type="number" id="prenda-stock" min="0" step="1" value="0" required>
+      </div>
+      <button type="submit" class="btn btn--primario">Guardar prenda</button>
+      <button type="button" class="btn btn--fantasma" id="btn-borrar-prenda" style="margin-top:8px;">Eliminar prenda</button>
+    </form>
+  </div>
+</div>
+
+<nav class="bottomnav">
+  <button class="bottomnav__item activo" data-seccion="panel">
+    <span class="icono">📊</span><span class="label">Panel</span>
+  </button>
+  <button class="bottomnav__item" data-seccion="ventas">
+    <span class="icono">💰</span><span class="label">Ventas</span>
+  </button>
+  <button class="bottomnav__item" data-seccion="gastos">
+    <span class="icono">💸</span><span class="label">Gastos</span>
+  </button>
+  <button class="bottomnav__item" data-seccion="compras">
+    <span class="icono">📦</span><span class="label">Compras</span>
+  </button>
+  <button class="bottomnav__item" data-seccion="prendas">
+    <span class="icono">👗</span><span class="label">Prendas</span>
+  </button>
+  <button class="bottomnav__item" data-seccion="movimientos">
+    <span class="icono">📋</span><span class="label">Movim.</span>
+  </button>
+</nav>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
