@@ -6,6 +6,8 @@ import {
 
 let prendas = [];
 let archivoImagenSeleccionado = null;
+let coloresActuales = [];
+let coloresOriginales = [];
 
 export function getPrendas() {
   return prendas;
@@ -18,7 +20,7 @@ export function getPrendaPorId(id) {
 export async function cargarPrendas() {
   const { data, error } = await supabase
     .from('prendas')
-    .select('*')
+    .select('*, prenda_colores(*)')
     .eq('activo', true)
     .order('created_at', { ascending: false });
 
@@ -27,8 +29,17 @@ export async function cargarPrendas() {
     console.error(error);
     return [];
   }
-  prendas = data || [];
+  prendas = (data || []).map((p) => ({ ...p, colores: p.prenda_colores || [] }));
   return prendas;
+}
+
+export function obtenerColoresDePrenda(prendaId) {
+  const p = getPrendaPorId(prendaId);
+  return (p?.colores || []).slice().sort((a, b) => a.color.localeCompare(b.color));
+}
+
+export function obtenerColoresConStock(prendaId) {
+  return obtenerColoresDePrenda(prendaId).filter((c) => c.stock > 0);
 }
 
 export function renderGridPrendas() {
@@ -51,6 +62,8 @@ export function renderGridPrendas() {
         el('div', { class: 'tarjeta-prenda__precio' }, formatoMoneda(p.precio_venta)),
         el('div', { class: `tarjeta-prenda__stock ${stockBajo ? 'tarjeta-prenda__stock--bajo' : ''}` },
           `Stock: ${p.stock}`),
+        el('div', { class: 'tarjeta-prenda__colores' },
+          (p.colores || []).map((c) => el('span', { class: 'pill-color' }, `${c.color}: ${c.stock}`))),
       ]),
     ]);
     grid.appendChild(tarjeta);
@@ -91,6 +104,42 @@ function actualizarInfoCostoModal() {
     `Ganancia por unidad: <b>${formatoMoneda(ganancia)}</b> · Margen: <b>${margen.toFixed(1)}%</b>`;
 }
 
+function renderColoresModal() {
+  const cont = document.getElementById('prenda-colores-container');
+  cont.innerHTML = '';
+  coloresActuales.forEach((c, i) => {
+    cont.appendChild(el('div', { class: 'color-row' }, [
+      el('input', {
+        type: 'text',
+        placeholder: 'Color (ej: negro)',
+        value: c.color,
+        oninput: (e) => { coloresActuales[i].color = e.target.value; },
+      }),
+      el('div', { class: 'color-row__stepper' }, [
+        el('button', { type: 'button', onclick: () => cambiarCantidadColor(i, -1) }, '−'),
+        el('span', {}, String(c.stock)),
+        el('button', { type: 'button', onclick: () => cambiarCantidadColor(i, 1) }, '+'),
+      ]),
+      el('button', { type: 'button', class: 'color-row__quitar', onclick: () => quitarColorModal(i) }, '✕'),
+    ]));
+  });
+}
+
+function cambiarCantidadColor(i, delta) {
+  coloresActuales[i].stock = Math.max(0, (coloresActuales[i].stock || 0) + delta);
+  renderColoresModal();
+}
+
+function quitarColorModal(i) {
+  coloresActuales.splice(i, 1);
+  renderColoresModal();
+}
+
+function agregarColorModal() {
+  coloresActuales.push({ color: '', stock: 0 });
+  renderColoresModal();
+}
+
 function limpiarFormularioPrenda() {
   document.getElementById('form-prenda').reset();
   document.getElementById('prenda-id').value = '';
@@ -99,6 +148,9 @@ function limpiarFormularioPrenda() {
   archivoImagenSeleccionado = null;
   document.getElementById('btn-borrar-prenda').classList.add('oculto');
   document.getElementById('modal-prenda-titulo').textContent = 'Nueva prenda';
+  coloresActuales = [{ color: '', stock: 0 }];
+  coloresOriginales = [];
+  renderColoresModal();
   actualizarInfoCostoModal();
 }
 
@@ -115,7 +167,10 @@ export function abrirModalPrenda(id = null) {
     document.getElementById('prenda-costo-etiqueta').value = p.costo_etiqueta;
     document.getElementById('prenda-costo-otros').value = p.costo_otros;
     document.getElementById('prenda-precio-venta').value = p.precio_venta;
-    document.getElementById('prenda-stock').value = p.stock;
+    coloresActuales = (p.colores || []).map((c) => ({ color: c.color, stock: c.stock }));
+    if (!coloresActuales.length) coloresActuales = [{ color: '', stock: 0 }];
+    coloresOriginales = coloresActuales.map((c) => c.color);
+    renderColoresModal();
     if (p.imagen_url) {
       const prev = document.getElementById('prenda-imagen-preview');
       prev.src = p.imagen_url;
@@ -149,6 +204,7 @@ async function subirImagenPrenda(file) {
 export function initPrendas({ onCambio }) {
   document.getElementById('btn-nueva-prenda').addEventListener('click', () => abrirModalPrenda());
   document.getElementById('modal-prenda-cerrar').addEventListener('click', cerrarModalPrenda);
+  document.getElementById('btn-agregar-color').addEventListener('click', agregarColorModal);
 
   ['prenda-precio-compra', 'prenda-costo-bolsa', 'prenda-costo-etiqueta', 'prenda-costo-otros', 'prenda-precio-venta']
     .forEach((idCampo) => {
@@ -168,6 +224,17 @@ export function initPrendas({ onCambio }) {
     e.preventDefault();
     const id = document.getElementById('prenda-id').value || null;
 
+    const coloresValidos = coloresActuales
+      .map((c) => ({ color: c.color.trim(), stock: Number(c.stock) || 0 }))
+      .filter((c) => c.color);
+
+    if (!coloresValidos.length) {
+      toast('Agregá al menos un color con su cantidad', 'error');
+      return;
+    }
+
+    const stockTotal = coloresValidos.reduce((acc, c) => acc + c.stock, 0);
+
     const payload = {
       nombre: document.getElementById('prenda-nombre').value.trim(),
       precio_compra: Number(document.getElementById('prenda-precio-compra').value) || 0,
@@ -175,7 +242,7 @@ export function initPrendas({ onCambio }) {
       costo_etiqueta: Number(document.getElementById('prenda-costo-etiqueta').value) || 0,
       costo_otros: Number(document.getElementById('prenda-costo-otros').value) || 0,
       precio_venta: Number(document.getElementById('prenda-precio-venta').value) || 0,
-      stock: Number(document.getElementById('prenda-stock').value) || 0,
+      stock: stockTotal,
     };
 
     if (archivoImagenSeleccionado) {
@@ -183,11 +250,14 @@ export function initPrendas({ onCambio }) {
       if (url) payload.imagen_url = url;
     }
 
+    let prendaId = id;
     let error;
     if (id) {
       ({ error } = await supabase.from('prendas').update(payload).eq('id', id));
     } else {
-      ({ error } = await supabase.from('prendas').insert(payload));
+      const { data, error: insertError } = await supabase.from('prendas').insert(payload).select().single();
+      error = insertError;
+      if (data) prendaId = data.id;
     }
 
     if (error) {
@@ -196,10 +266,22 @@ export function initPrendas({ onCambio }) {
       return;
     }
 
+    const aBorrar = coloresOriginales.filter((nombre) => !coloresValidos.some((c) => c.color === nombre));
+    if (aBorrar.length) {
+      await supabase.from('prenda_colores').delete().eq('prenda_id', prendaId).in('color', aBorrar);
+    }
+    for (const c of coloresValidos) {
+      await supabase.from('prenda_colores').upsert(
+        { prenda_id: prendaId, color: c.color, stock: c.stock },
+        { onConflict: 'prenda_id,color' },
+      );
+    }
+
     toast(id ? 'Prenda actualizada' : 'Prenda cargada');
     cerrarModalPrenda();
     await cargarPrendas();
     renderGridPrendas();
+    document.dispatchEvent(new CustomEvent('mina:prendas-actualizadas'));
     if (onCambio) onCambio();
   });
 
@@ -217,6 +299,7 @@ export function initPrendas({ onCambio }) {
     cerrarModalPrenda();
     await cargarPrendas();
     renderGridPrendas();
+    document.dispatchEvent(new CustomEvent('mina:prendas-actualizadas'));
     if (onCambio) onCambio();
   });
 }
