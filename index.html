@@ -91,6 +91,10 @@
         <label>Prenda vendida</label>
         <select id="venta-prenda" required></select>
       </div>
+      <div class="campo">
+        <label>Color</label>
+        <select id="venta-color" required></select>
+      </div>
       <div class="fila-2">
         <div class="campo">
           <label>Cantidad</label>
@@ -187,6 +191,11 @@
         <label>Prenda</label>
         <select id="compra-prenda" required></select>
       </div>
+      <div class="campo">
+        <label>Color</label>
+        <input type="text" id="compra-color" list="compra-color-lista" placeholder="Ej: negro" required>
+        <datalist id="compra-color-lista"></datalist>
+      </div>
       <div class="fila-2">
         <div class="campo">
           <label>Cantidad</label>
@@ -279,8 +288,9 @@
       </div>
       <div class="info-costo" id="prenda-info-ganancia">Ganancia: <b>$0</b> · Margen: <b>0%</b></div>
       <div class="campo">
-        <label>Stock disponible</label>
-        <input type="number" id="prenda-stock" min="0" step="1" value="0" required>
+        <label>Colores y stock</label>
+        <div id="prenda-colores-container"></div>
+        <button type="button" class="btn btn--fantasma" id="btn-agregar-color">+ Agregar color</button>
       </div>
       <button type="submit" class="btn btn--primario">Guardar prenda</button>
       <button type="button" class="btn btn--fantasma" id="btn-borrar-prenda" style="margin-top:8px;">Eliminar prenda</button>
