@@ -2,7 +2,24 @@ import { supabase } from './supabaseClient.js';
 import {
   formatoMoneda, formatoFechaCorta, fechaLocalISO, toast, el,
 } from './utils.js';
-import { getPrendaPorId, poblarSelectPrendas, cargarPrendas, renderGridPrendas } from './prendas.js';
+import { getPrendaPorId, poblarSelectPrendas, cargarPrendas, renderGridPrendas, obtenerColoresConStock } from './prendas.js';
+
+let coloresVentaActual = [];
+
+function poblarSelectColorVenta() {
+  const prendaId = document.getElementById('venta-prenda').value;
+  const select = document.getElementById('venta-color');
+  select.innerHTML = '';
+  coloresVentaActual = prendaId ? obtenerColoresConStock(prendaId) : [];
+
+  if (!coloresVentaActual.length) {
+    select.appendChild(el('option', { value: '' }, 'Sin stock por color'));
+    return;
+  }
+  for (const c of coloresVentaActual) {
+    select.appendChild(el('option', { value: c.color }, `${c.color} (quedan ${c.stock})`));
+  }
+}
 
 export async function cargarVentas({ desde, hasta } = {}) {
   let query = supabase.from('ventas').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false });
@@ -44,7 +61,7 @@ export function renderListaVentas(ventas) {
     cont.appendChild(el('div', { class: 'fila-item' }, [
       el('div', { class: 'fila-item__icono fila-item__icono--venta' }, '💰'),
       el('div', { class: 'fila-item__cuerpo' }, [
-        el('div', { class: 'fila-item__titulo' }, `${v.prenda_nombre} × ${v.cantidad}`),
+        el('div', { class: 'fila-item__titulo' }, `${v.prenda_nombre}${v.color ? ' · ' + v.color : ''} × ${v.cantidad}`),
         el('div', { class: 'fila-item__detalle' }, `${formatoFechaCorta(v.fecha)} · ${v.medio_pago} · ganancia ${formatoMoneda(v.ganancia)}`),
       ]),
       el('div', { class: 'fila-item__monto fila-item__monto--pos' }, `+${formatoMoneda(v.total)}`),
@@ -70,10 +87,15 @@ export function initVentas({ onCambio }) {
     const seleccionPrevia = select.value;
     poblarSelectPrendas(select, { soloConStock: true });
     if ([...select.options].some((o) => o.value === seleccionPrevia)) select.value = seleccionPrevia;
+    poblarSelectColorVenta();
     actualizarInfoGananciaVenta();
   });
 
-  ['venta-prenda', 'venta-cantidad', 'venta-precio'].forEach((idCampo) => {
+  document.getElementById('venta-prenda').addEventListener('change', () => {
+    poblarSelectColorVenta();
+    actualizarInfoGananciaVenta();
+  });
+  ['venta-cantidad', 'venta-precio', 'venta-color'].forEach((idCampo) => {
     document.getElementById(idCampo).addEventListener('input', actualizarInfoGananciaVenta);
   });
 
@@ -85,9 +107,16 @@ export function initVentas({ onCambio }) {
       toast('Elegí una prenda válida', 'error');
       return;
     }
+    const color = document.getElementById('venta-color').value;
+    const colorInfo = coloresVentaActual.find((c) => c.color === color);
+    if (!color || !colorInfo) {
+      toast('Elegí un color válido', 'error');
+      return;
+    }
+
     const cantidad = Number(document.getElementById('venta-cantidad').value);
-    if (cantidad > prenda.stock) {
-      toast(`Solo hay ${prenda.stock} unidades en stock`, 'error');
+    if (cantidad > colorInfo.stock) {
+      toast(`Solo hay ${colorInfo.stock} unidades de ese color`, 'error');
       return;
     }
 
@@ -95,6 +124,7 @@ export function initVentas({ onCambio }) {
       fecha: document.getElementById('venta-fecha').value,
       prenda_id: prenda.id,
       prenda_nombre: prenda.nombre,
+      color,
       cantidad,
       precio_venta: Number(document.getElementById('venta-precio').value),
       costo_unitario: prenda.costo_total,
