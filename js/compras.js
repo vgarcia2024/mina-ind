@@ -1,6 +1,16 @@
 import { supabase } from './supabaseClient.js';
 import { formatoMoneda, formatoFechaCorta, fechaLocalISO, toast, el } from './utils.js';
-import { getPrendas, poblarSelectPrendas, cargarPrendas, renderGridPrendas } from './prendas.js';
+import { getPrendas, poblarSelectPrendas, cargarPrendas, renderGridPrendas, obtenerColoresDePrenda } from './prendas.js';
+
+function poblarDatalistColorCompra() {
+  const prendaId = document.getElementById('compra-prenda').value;
+  const datalist = document.getElementById('compra-color-lista');
+  datalist.innerHTML = '';
+  if (!prendaId) return;
+  for (const c of obtenerColoresDePrenda(prendaId)) {
+    datalist.appendChild(el('option', { value: c.color }));
+  }
+}
 
 export async function cargarCompras({ desde, hasta } = {}) {
   let query = supabase.from('compras').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false });
@@ -39,7 +49,7 @@ export function renderListaCompras(compras) {
     cont.appendChild(el('div', { class: 'fila-item' }, [
       el('div', { class: 'fila-item__icono fila-item__icono--compra' }, '📦'),
       el('div', { class: 'fila-item__cuerpo' }, [
-        el('div', { class: 'fila-item__titulo' }, `${nombrePrenda} × ${c.cantidad}`),
+        el('div', { class: 'fila-item__titulo' }, `${nombrePrenda}${c.color ? ' · ' + c.color : ''} × ${c.cantidad}`),
         el('div', { class: 'fila-item__detalle' }, `${formatoFechaCorta(c.fecha)}${c.proveedor ? ' · ' + c.proveedor : ''} · ${formatoMoneda(c.costo_unitario)}/u`),
       ]),
       el('div', {}, [
@@ -70,7 +80,10 @@ export function initCompras({ onCambio }) {
     const seleccionPrevia = select.value;
     poblarSelectPrendas(select);
     if ([...select.options].some((o) => o.value === seleccionPrevia)) select.value = seleccionPrevia;
+    poblarDatalistColorCompra();
   });
+
+  document.getElementById('compra-prenda').addEventListener('change', poblarDatalistColorCompra);
 
   ['compra-cantidad', 'compra-costo-total'].forEach((idCampo) => {
     document.getElementById(idCampo).addEventListener('input', actualizarInfoUnitarioCompra);
@@ -88,6 +101,7 @@ export function initCompras({ onCambio }) {
       fecha: document.getElementById('compra-fecha').value,
       proveedor: document.getElementById('compra-proveedor').value.trim() || null,
       prenda_id: prendaId,
+      color: document.getElementById('compra-color').value.trim(),
       cantidad: Number(document.getElementById('compra-cantidad').value),
       costo_total: Number(document.getElementById('compra-costo-total').value),
       pagado: document.getElementById('compra-pagado').checked,
@@ -103,6 +117,7 @@ export function initCompras({ onCambio }) {
     toast('Compra registrada, stock actualizado');
     document.getElementById('form-compra').reset();
     document.getElementById('compra-fecha').value = fechaLocalISO();
+    document.getElementById('compra-color').value = '';
     document.getElementById('compra-pagado').checked = true;
     document.getElementById('compra-info-unitario').classList.add('oculto');
     await cargarPrendas();
