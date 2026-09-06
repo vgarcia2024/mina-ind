@@ -491,3 +491,64 @@ select {
   .modal-fondo { align-items: center; justify-content: center; }
   .modal { max-width: 460px; border-radius: 20px; }
 }
+
+/* ---------- Colores por prenda (modal) ---------- */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.color-row input[type="text"] { flex: 1; }
+
+.color-row__stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fffffb;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 4px 8px;
+}
+.color-row__stepper button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--rose);
+  background: #fff;
+  color: var(--rose-dark);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.color-row__stepper span {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+.color-row__quitar {
+  background: none;
+  border: none;
+  color: var(--brick);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ---------- Pills de color en la tarjeta de prenda ---------- */
+.tarjeta-prenda__colores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.pill-color {
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: var(--rose-pale);
+  color: var(--rose-dark);
+  font-weight: 600;
+}
