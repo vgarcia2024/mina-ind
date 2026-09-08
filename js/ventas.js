@@ -34,6 +34,19 @@ export async function cargarVentas({ desde, hasta } = {}) {
   return data || [];
 }
 
+function mostrarFichaPrenda(prendaId) {
+  const info = document.getElementById('venta-info-ganancia');
+  const prenda = getPrendaPorId(prendaId);
+  if (!prenda) {
+    info.classList.add('oculto');
+    return;
+  }
+  info.classList.remove('oculto');
+  info.innerHTML = `Costo real: <b>${formatoMoneda(prenda.costo_total)}</b>
+    (compra ${formatoMoneda(prenda.precio_compra)} + bolsa ${formatoMoneda(prenda.costo_bolsa)} + etiqueta ${formatoMoneda(prenda.costo_etiqueta)} + otros ${formatoMoneda(prenda.costo_otros)})
+    · Precio de venta sugerido: <b>${formatoMoneda(prenda.precio_venta)}</b>`;
+}
+
 function actualizarInfoGananciaVenta() {
   const prendaId = document.getElementById('venta-prenda').value;
   const cantidad = Number(document.getElementById('venta-cantidad').value) || 0;
@@ -41,13 +54,18 @@ function actualizarInfoGananciaVenta() {
   const info = document.getElementById('venta-info-ganancia');
 
   const prenda = getPrendaPorId(prendaId);
-  if (!prenda || !cantidad || !precioVenta) {
+  if (!prenda) {
     info.classList.add('oculto');
     return;
   }
+  if (!cantidad || !precioVenta) {
+    mostrarFichaPrenda(prendaId); // mientras falta completar el form, igual mostramos el costo de referencia
+    return;
+  }
   const ganancia = (precioVenta - prenda.costo_total) * cantidad;
+  const margen = precioVenta > 0 ? (ganancia / (precioVenta * cantidad)) * 100 : 0;
   info.classList.remove('oculto');
-  info.innerHTML = `Costo real de la prenda: <b>${formatoMoneda(prenda.costo_total)}</b> por unidad · Ganancia de esta venta: <b>${formatoMoneda(ganancia)}</b>`;
+  info.innerHTML = `Costo real de la prenda: <b>${formatoMoneda(prenda.costo_total)}</b> por unidad · Ganancia de esta venta: <b>${formatoMoneda(ganancia)}</b> · Margen: <b>${margen.toFixed(1)}%</b>`;
 }
 
 export function renderListaVentas(ventas) {
@@ -93,6 +111,10 @@ export function initVentas({ onCambio }) {
 
   document.getElementById('venta-prenda').addEventListener('change', () => {
     poblarSelectColorVenta();
+    const prenda = getPrendaPorId(document.getElementById('venta-prenda').value);
+    if (prenda) {
+      document.getElementById('venta-precio').value = prenda.precio_venta;
+    }
     actualizarInfoGananciaVenta();
   });
   ['venta-cantidad', 'venta-precio', 'venta-color'].forEach((idCampo) => {
