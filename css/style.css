@@ -132,12 +132,19 @@ main {
   gap: 3px;
   color: var(--ink-soft);
   cursor: pointer;
+  border-radius: var(--radius-s);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bottomnav__item:hover {
+  background-color: #f2e6e6;
 }
 
 .bottomnav__item .icono {
   width: 23px;
   height: 23px;
   stroke: var(--ink-soft);
+  transition: stroke 0.3s ease;
 }
 
 .bottomnav__item.activo .icono { stroke: var(--rose-dark); }
