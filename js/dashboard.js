@@ -81,7 +81,7 @@ function renderStockBajo() {
   }
   for (const p of bajas) {
     cont.appendChild(el('div', { class: 'fila-item' }, [
-      el('div', { class: 'fila-item__icono fila-item__icono--compra' }, '👗'),
+      el('div', { class: 'fila-item__icono fila-item__icono--compra', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M8.5 3.5 5 6.5 7 9.5l1.5-1V20h7V8.5l1.5 1 2-3-3.5-3H15c0 1.1-1.34 2-3 2s-3-.9-3-2Z"/></svg>' }),
       el('div', { class: 'fila-item__cuerpo' }, [
         el('div', { class: 'fila-item__titulo' }, p.nombre),
         el('div', { class: 'fila-item__detalle' }, p.stock === 0 ? 'Sin stock' : `Quedan ${p.stock}`),
