@@ -134,11 +134,16 @@ main {
   cursor: pointer;
 }
 
-.bottomnav__item span.icono { font-size: 19px; line-height: 1; }
+.bottomnav__item .icono {
+  width: 23px;
+  height: 23px;
+  stroke: var(--ink-soft);
+}
+
+.bottomnav__item.activo .icono { stroke: var(--rose-dark); }
 .bottomnav__item span.label { font-size: 10.5px; font-weight: 500; }
 
 .bottomnav__item.activo { color: var(--rose-dark); }
-.bottomnav__item.activo span.icono { transform: translateY(-1px); }
 
 /* ---------- Cards / Panel ---------- */
 .grid-panel {
