@@ -61,7 +61,7 @@ dialog .acts button{flex:1}
 .resumen{display:flex;justify-content:space-between;align-items:center;background:var(--rosa);border-radius:10px;padding:9px 12px;font-weight:600}
 .resumen b{font-size:18px;color:var(--vino)}
 .ganancia{border:1.5px dashed var(--vino);border-radius:10px;padding:10px 12px;font-weight:600;text-align:center}
-.ganancia b{font-size:19px;color:var(--vino)}.ganancia.perdida{background:var(--rosa)}
+.ganancia b{font-size:19px;color:var(--vino)}.ganancia small{font-size:12.5px;font-weight:600;opacity:.8}.ganancia.perdida{background:var(--rosa)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--vino2);color:var(--crema);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 #toast.show{opacity:1}
 @media(max-width:520px){h1{font-size:46px}.stat b{font-size:17px}}
@@ -257,7 +257,8 @@ function calcGanancia() {
   if (f.precio.value === '') { box.className = 'ganancia'; box.textContent = 'Poné el precio de venta para ver tu ganancia.'; return; }
   const g = num(f.precio.value) - total;
   box.className = 'ganancia' + (g < 0 ? ' perdida' : '');
-  box.innerHTML = g < 0 ? `Ojo: estarías perdiendo <b>${money(-g)}</b>` : `Tu ganancia sería de: <b>${money(g)}</b>`;
+  const pct = total ? ` <small>(${g < 0 ? '-' : '+'}${Math.abs(Math.round(g / total * 100))}%)</small>` : '';
+  box.innerHTML = g < 0 ? `Ojo: estarías perdiendo <b>${money(-g)}</b>${pct}` : `Tu ganancia sería de: <b>${money(g)}</b>${pct}`;
 }
 $('#fPrenda').addEventListener('input', e => {
   if (['costo', 'etiqueta', 'bolsa', 'otros', 'precio'].includes(e.target.name)) calcGanancia();
