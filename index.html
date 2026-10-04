@@ -16,9 +16,6 @@ nav button{font:700 16px Quicksand;border:1.5px solid var(--vino);border-bottom:
 nav button.on{background:var(--vino);color:var(--crema);opacity:1}
 main{max-width:980px;margin:0 auto;padding:20px 16px 90px}
 .bar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{font:600 14px Quicksand;border:1.5px solid var(--vino);background:none;color:var(--vino);border-radius:99px;padding:5px 14px;cursor:pointer}
-.chip.on{background:var(--vino);color:var(--crema)}
 button.solid,button.ghost{font:700 15px Quicksand;border-radius:99px;padding:10px 20px;border:1.5px solid var(--vino);cursor:pointer}
 .solid{background:var(--vino);color:var(--crema)}.solid:hover{background:var(--vino2)}
 .ghost{background:none;color:var(--vino)}.ghost:hover{background:var(--rosa)}
@@ -74,7 +71,7 @@ dialog .acts button{flex:1}
 
 <main>
   <section id="stock">
-    <div class="bar"><div class="chips" id="chips"></div><button class="solid" id="nuevaPrenda">+ Nueva prenda</button></div>
+    <div class="bar"><span></span><button class="solid" id="nuevaPrenda">+ Nueva prenda</button></div>
     <div class="grid" id="grid"></div>
   </section>
   <section id="ventas" hidden>
@@ -96,8 +93,6 @@ dialog .acts button{flex:1}
   <form id="fPrenda">
     <h2 id="tPrenda">Nueva prenda</h2>
     <label>Nombre<input name="nombre" required></label>
-    <label>Categoría<input name="cat" list="listaCats" placeholder="Elegí una o escribí una nueva" required></label>
-    <datalist id="listaCats"></datalist>
     <label>Precio<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
     <label>Foto<input name="foto" type="file" accept="image/*"></label>
     <img id="prev" alt="" hidden>
@@ -145,7 +140,7 @@ const money = n => (n < 0 ? '-$' : '$') + Math.abs(Number(n || 0)).toLocaleStrin
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 
-let cats = [], prendas = [], ventas = [], gastos = [], filtro = 0, editing = null;
+let prendas = [], ventas = [], gastos = [], editing = null;
 
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -153,15 +148,14 @@ function toast(msg) {
 }
 
 async function cargar() {
-  const [c, p, v, g] = await Promise.all([
-    db.from('categorias').select('*').order('nombre'),
+  const [p, v, g] = await Promise.all([
     db.from('prendas').select('*, variantes(*)').order('created_at', { ascending: false }),
     db.from('ventas').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false }),
     db.from('gastos').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false })
   ]);
-  const err = c.error || p.error || v.error || g.error;
+  const err = p.error || v.error || g.error;
   if (err) { toast('Error al cargar: ' + err.message); return; }
-  cats = c.data; prendas = p.data; ventas = v.data; gastos = g.data;
+  prendas = p.data; ventas = v.data; gastos = g.data;
   prendas.forEach(x => x.variantes.sort((a, b) => a.id - b.id));
   render();
 }
@@ -169,18 +163,14 @@ async function cargar() {
 function render() { renderStock(); renderVentas(); renderGastos(); }
 
 function renderStock() {
-  $('#chips').innerHTML = [{ id: 0, nombre: 'Todas' }, ...cats].map(c =>
-    `<button class="chip ${c.id === filtro ? 'on' : ''}" data-cat="${c.id}">${esc(c.nombre)}</button>`).join('');
-  $('#listaCats').innerHTML = cats.map(c => `<option value="${esc(c.nombre)}">`).join('');
-  const lista = prendas.filter(p => !filtro || p.categoria_id === filtro);
+  const lista = prendas;
   if (!lista.length) { $('#grid').innerHTML = '<p class="vacio">Todavía no hay prendas acá. Tocá “+ Nueva prenda” para cargar la primera.</p>'; return; }
   $('#grid').innerHTML = lista.map(p => {
-    const cat = cats.find(c => c.id === p.categoria_id)?.nombre || 'Sin categoría';
     const total = p.variantes.reduce((s, v) => s + v.stock, 0);
     return `<article class="card">
       ${p.imagen_url ? `<img src="${esc(p.imagen_url)}" alt="${esc(p.nombre)}" loading="lazy">` : '<div class="noimg">MINA</div>'}
       <div class="in">
-        <h3>${esc(p.nombre)}</h3><span class="cat">${esc(cat)} · ${total} en stock</span>
+        <h3>${esc(p.nombre)}</h3><span class="cat">${total} en stock</span>
         <span class="precio">${money(p.precio)}</span>
         <div class="vars">${p.variantes.map(v => `<span class="v ${v.stock ? '' : 'cero'}">${esc(v.color)}: ${v.stock}</span>`).join('')}</div>
         <div class="acts"><button class="ghost" data-edit="${p.id}">Editar</button><button class="ghost" data-del="${p.id}">Borrar</button></div>
@@ -251,7 +241,6 @@ function abrirPrenda(p) {
   $('#tPrenda').textContent = p ? 'Editar prenda' : 'Nueva prenda';
   if (p) {
     f.nombre.value = p.nombre; f.precio.value = p.precio;
-    f.cat.value = cats.find(c => c.id === p.categoria_id)?.nombre || '';
     p.variantes.forEach(filaVar);
   }
   if (!$('#vars').children.length) filaVar();
@@ -269,10 +258,7 @@ $('#fPrenda').onsubmit = async e => {
       const up = await db.storage.from(BUCKET_PRENDAS).upload(path, file); if (up.error) throw up.error;
       url = db.storage.from(BUCKET_PRENDAS).getPublicUrl(path).data.publicUrl;
     }
-    const nom = f.cat.value.trim();
-    let cat = cats.find(c => c.nombre.toLowerCase() === nom.toLowerCase());
-    if (!cat) { const r = await db.from('categorias').insert({ nombre: nom }).select().single(); if (r.error) throw r.error; cat = r.data; }
-    const row = { nombre: f.nombre.value.trim(), categoria_id: cat.id, precio: +f.precio.value, imagen_url: url };
+    const row = { nombre: f.nombre.value.trim(), precio: +f.precio.value, imagen_url: url };
     let id = editing?.id;
     if (id) { const r = await db.from('prendas').update(row).eq('id', id); if (r.error) throw r.error; }
     else { const r = await db.from('prendas').insert(row).select().single(); if (r.error) throw r.error; id = r.data.id; }
@@ -342,7 +328,6 @@ document.addEventListener('click', async e => {
     document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
     ['stock', 'ventas', 'gastos'].forEach(id => $('#' + id).hidden = id !== t.dataset.tab);
   }
-  if (t.dataset.cat !== undefined) { filtro = +t.dataset.cat; renderStock(); }
   if (t.dataset.close !== undefined) t.closest('dialog').close();
   if (t.dataset.edit) abrirPrenda(prendas.find(p => p.id === +t.dataset.edit));
   if (t.dataset.del && confirm('¿Borrar esta prenda y su stock? Las ventas ya registradas se mantienen.')) {
