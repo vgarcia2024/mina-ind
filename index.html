@@ -40,7 +40,12 @@ button:disabled{opacity:.5}
 .dia{font-weight:700;margin:18px 0 8px;font-size:15px}
 .vacio{text-align:center;padding:50px 10px;opacity:.8}
 dialog{border:1.5px solid var(--vino);border-radius:16px;background:var(--crema);color:var(--vino2);width:min(440px,94vw);max-height:92vh;padding:0}
+dialog{margin:auto}
+dialog[open]{animation:entra .28s cubic-bezier(.22,.8,.3,1)}
+dialog[open]::backdrop{animation:velo .28s ease-out}
 dialog::backdrop{background:rgba(122,55,60,.45)}
+@keyframes entra{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes velo{from{opacity:0}to{opacity:1}}
 dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
 dialog h2{font-family:'Poiret One';font-size:30px;font-weight:400;letter-spacing:.08em;color:var(--vino)}
 label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
@@ -56,7 +61,7 @@ dialog .acts button{flex:1}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--vino2);color:var(--crema);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 #toast.show{opacity:1}
 @media(max-width:520px){h1{font-size:46px}.stat b{font-size:17px}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,dialog[open],dialog[open]::backdrop{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
