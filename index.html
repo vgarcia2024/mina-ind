@@ -54,9 +54,12 @@ input,select{font:500 16px Quicksand;border:1.5px solid var(--vino);border-radiu
 .x{border:1.5px solid var(--vino);background:none;color:var(--vino);border-radius:10px;width:42px;font-size:20px;cursor:pointer}
 dialog .acts button{flex:1}
 #prev{width:90px;height:112px;object-fit:cover;border-radius:10px;border:1.5px solid var(--vino)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .stat{border:1.5px solid var(--vino);border-radius:var(--r);background:var(--rosa);padding:12px 8px;text-align:center}
-.stat span{display:block;font-size:14px;font-weight:600}.stat b{font-size:24px;color:var(--vino)}
+.stat{padding:16px 10px}.stat span{display:block;font-size:14px;font-weight:600}.stat b{font-size:26px;color:var(--vino)}
+.stat small{display:block;font-size:12.5px;opacity:.8;margin-top:4px}
+.stat.real{background:var(--vino);color:var(--crema);grid-column:1/-1;border-radius:22px}.stat.real b{color:var(--crema);font-size:32px}
+.gv{display:block;font-size:12.5px;font-weight:600;opacity:.8;text-align:right}
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .resumen{display:flex;justify-content:space-between;align-items:center;background:var(--rosa);border-radius:10px;padding:9px 12px;font-weight:600}
 .resumen b{font-size:18px;color:var(--vino)}
@@ -64,14 +67,14 @@ dialog .acts button{flex:1}
 .ganancia b{font-size:19px;color:var(--vino)}.ganancia small{font-size:12.5px;font-weight:600;opacity:.8}.ganancia.perdida{background:var(--rosa)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--vino2);color:var(--crema);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 #toast.show{opacity:1}
-@media(max-width:520px){h1{font-size:46px}.stat b{font-size:17px}}
+@media(max-width:520px){h1{font-size:46px}.stat b{font-size:20px}.stat.real b{font-size:26px}}
 @media(prefers-reduced-motion:reduce){*,dialog[open],dialog[open]::backdrop{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <header>
   <h1>MINA</h1>
-  <nav><button class="on" data-tab="stock">Stock</button><button data-tab="ventas">Ventas</button><button data-tab="gastos">Gastos</button></nav>
+  <nav><button class="on" data-tab="stock">Stock</button><button data-tab="ventas">Ventas</button><button data-tab="gastos">Gastos</button><button data-tab="estadisticas">Estadísticas</button></nav>
 </header>
 
 <main>
@@ -84,13 +87,16 @@ dialog .acts button{flex:1}
     <div id="listaVentas"></div>
   </section>
   <section id="gastos" hidden>
+    <div class="bar"><span></span><button class="solid" id="nuevoGasto">+ Nuevo gasto</button></div>
+    <div id="listaGastos"></div>
+  </section>
+  <section id="estadisticas" hidden>
     <div class="stats">
       <div class="stat"><span>Gastado</span><b id="stGastado">$0</b></div>
       <div class="stat"><span>Vendido</span><b id="stVendido">$0</b></div>
-      <div class="stat"><span>Ganancia</span><b id="stGanancia">$0</b></div>
+      <div class="stat"><span>Ganancia</span><b id="stGanancia">$0</b><small>Vendido − Gastado</small></div>
+      <div class="stat real"><span>Ganancia real</span><b id="stReal">$0</b><small>Suma de lo que ganaste en cada prenda vendida (precio de venta − costo total)</small></div>
     </div>
-    <div class="bar"><span></span><button class="solid" id="nuevoGasto">+ Nuevo gasto</button></div>
-    <div id="listaGastos"></div>
   </section>
 </main>
 
@@ -173,7 +179,22 @@ async function cargar() {
   render();
 }
 
-function render() { renderStock(); renderVentas(); renderGastos(); }
+const costoTotal = p => Number(p?.costo || 0) + Number(p?.etiqueta || 0) + Number(p?.bolsa || 0) + Number(p?.otros || 0);
+const signed = n => (n > 0 ? '+' : '') + money(n);
+function gananciaVenta(v) {
+  const c = v.costo_unitario != null ? Number(v.costo_unitario) : costoTotal(prendas.find(p => p.id === v.prenda_id));
+  return v.cantidad * (Number(v.precio_unitario) - c);
+}
+function render() { renderStock(); renderVentas(); renderGastos(); renderEstadisticas(); }
+
+function renderEstadisticas() {
+  const gastado = gastos.reduce((s, g) => s + Number(g.monto), 0);
+  const vendido = ventas.reduce((s, v) => s + v.cantidad * Number(v.precio_unitario), 0);
+  $('#stGastado').textContent = money(gastado);
+  $('#stVendido').textContent = money(vendido);
+  $('#stGanancia').textContent = money(vendido - gastado);
+  $('#stReal').textContent = signed(ventas.reduce((s, v) => s + gananciaVenta(v), 0));
+}
 
 function renderStock() {
   const lista = prendas;
@@ -203,7 +224,7 @@ function renderVentas() {
     html += `<div class="row"><div class="vinfo">${img ? `<img class="mini" src="${esc(img)}" alt="" loading="lazy">` : '<div class="mini">MINA</div>'}
       <div><b>${esc(v.prenda_nombre)}${v.color && v.color !== 'Único' ? ' · ' + esc(v.color) : ''}</b>
       <small>${v.cantidad} × ${money(v.precio_unitario)}</small></div></div>
-      <div style="display:flex;gap:10px;align-items:center"><span class="tot">${money(v.cantidad * v.precio_unitario)}</span>
+      <div style="display:flex;gap:10px;align-items:center"><div><span class="tot">${money(v.cantidad * v.precio_unitario)}</span><span class="gv">${signed(gananciaVenta(v))}</span></div>
       <button class="x" data-delv="${v.id}" aria-label="Borrar venta">×</button></div></div>`;
   }
   $('#listaVentas').innerHTML = html;
@@ -211,11 +232,6 @@ function renderVentas() {
 
 /* ---------- Gastos ---------- */
 function renderGastos() {
-  const gastado = gastos.reduce((s, g) => s + Number(g.monto), 0);
-  const vendido = ventas.reduce((s, v) => s + v.cantidad * Number(v.precio_unitario), 0);
-  $('#stGastado').textContent = money(gastado);
-  $('#stVendido').textContent = money(vendido);
-  $('#stGanancia').textContent = money(vendido - gastado);
   if (!gastos.length) { $('#listaGastos').innerHTML = '<p class="vacio">Todavía no cargaste gastos. Tocá “+ Nuevo gasto”.</p>'; return; }
   let dia = '', html = '';
   for (const g of gastos) {
@@ -346,7 +362,7 @@ $('#fVenta').onsubmit = async e => {
   btn.disabled = true;
   try {
     const r = await db.from('ventas').insert({ fecha: f.fecha.value, prenda_id: p.id, variante_id: v.id,
-      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: Number(p.precio) });
+      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: Number(p.precio), costo_unitario: costoTotal(p) });
     if (r.error) throw r.error;
     const s = await db.from('variantes').update({ stock: v.stock - cant }).eq('id', v.id); if (s.error) throw s.error;
     $('#dVenta').close(); toast('Venta registrada'); await cargar();
@@ -359,7 +375,7 @@ document.addEventListener('click', async e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.tab) {
     document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
-    ['stock', 'ventas', 'gastos'].forEach(id => $('#' + id).hidden = id !== t.dataset.tab);
+    ['stock', 'ventas', 'gastos', 'estadisticas'].forEach(id => $('#' + id).hidden = id !== t.dataset.tab);
   }
   if (t.dataset.close !== undefined) t.closest('dialog').close();
   if (t.dataset.edit) abrirPrenda(prendas.find(p => p.id === +t.dataset.edit));
