@@ -1,342 +1,368 @@
 <!DOCTYPE html>
-<html lang="es-AR">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>MINA · Administración</title>
-
-<!-- PWA: manifest + íconos -->
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/favicon.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-
-<!-- iOS / Safari: que abra como app sin barra de navegador -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MINA">
-<meta name="theme-color" content="#8a5f5f">
-
-<link rel="stylesheet" href="css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MINA</title>
+<link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--crema:#fffce4;--rosa:#f5dfd2;--rosa2:#e9c8bb;--vino:#9a4a4f;--vino2:#7a373c;--r:12px}
+*{box-sizing:border-box;margin:0}
+body{font-family:Quicksand,system-ui,sans-serif;background:var(--crema);color:var(--vino2);min-height:100vh}
+header{background:repeating-linear-gradient(90deg,var(--rosa) 0 18px,var(--crema) 18px 36px);border-bottom:1.5px solid var(--vino);padding:28px 16px 0;text-align:center}
+h1{font-family:'Poiret One',cursive;font-weight:400;font-size:64px;letter-spacing:.35em;padding-left:.35em;color:var(--vino);text-shadow:3px 3px 0 var(--rosa2);line-height:1}
+nav{display:flex;justify-content:center;gap:8px;margin-top:20px}
+nav button{font:700 16px Quicksand;border:1.5px solid var(--vino);border-bottom:0;border-radius:var(--r) var(--r) 0 0;background:var(--crema);color:var(--vino);padding:10px 28px;cursor:pointer;opacity:.65}
+nav button.on{background:var(--vino);color:var(--crema);opacity:1}
+main{max-width:980px;margin:0 auto;padding:20px 16px 90px}
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 14px Quicksand;border:1.5px solid var(--vino);background:none;color:var(--vino);border-radius:99px;padding:5px 14px;cursor:pointer}
+.chip.on{background:var(--vino);color:var(--crema)}
+button.solid,button.ghost{font:700 15px Quicksand;border-radius:99px;padding:10px 20px;border:1.5px solid var(--vino);cursor:pointer}
+.solid{background:var(--vino);color:var(--crema)}.solid:hover{background:var(--vino2)}
+.ghost{background:none;color:var(--vino)}.ghost:hover{background:var(--rosa)}
+button:disabled{opacity:.5}
+:focus-visible{outline:3px solid var(--vino2);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{border:1.5px solid var(--vino);border-radius:var(--r);overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.card img,.noimg{width:100%;aspect-ratio:4/5;object-fit:cover;background:var(--rosa);display:grid;place-items:center;font-family:'Poiret One';font-size:34px;color:var(--vino)}
+.card .in{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-size:17px}.cat{font-size:13px;opacity:.75}
+.precio{font-size:20px;font-weight:700;color:var(--vino)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.v{font-size:13px;background:var(--rosa);border-radius:99px;padding:3px 10px}.v.cero{background:none;border:1px dashed var(--vino);opacity:.7}
+.acts{display:flex;gap:8px;margin-top:auto;padding-top:6px}
+.acts button{flex:1;padding:7px 10px;font-size:14px}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1.5px solid var(--vino);border-radius:var(--r);background:#fff;padding:12px 14px;margin-bottom:10px}
+.row b{display:block}.row small{opacity:.75}
+.row .tot{font-weight:700;font-size:18px;white-space:nowrap}
+.dia{font-weight:700;margin:18px 0 8px;font-size:15px}
+.vacio{text-align:center;padding:50px 10px;opacity:.8}
+dialog{border:1.5px solid var(--vino);border-radius:16px;background:var(--crema);color:var(--vino2);width:min(440px,94vw);max-height:92vh;padding:0}
+dialog::backdrop{background:rgba(122,55,60,.45)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
+dialog h2{font-family:'Poiret One';font-size:30px;font-weight:400;letter-spacing:.08em;color:var(--vino)}
+label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+input,select{font:500 16px Quicksand;border:1.5px solid var(--vino);border-radius:10px;padding:9px 11px;background:#fff;color:var(--vino2);width:100%}
+.sub{font-weight:700;font-size:14px}
+.vr{display:flex;gap:6px;margin-bottom:6px}.vr .vc{flex:2}.vr .vq{flex:1}
+.x{border:1.5px solid var(--vino);background:none;color:var(--vino);border-radius:10px;width:42px;font-size:20px;cursor:pointer}
+dialog .acts button{flex:1}
+#prev{width:90px;height:112px;object-fit:cover;border-radius:10px;border:1.5px solid var(--vino)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat{border:1.5px solid var(--vino);border-radius:var(--r);background:var(--rosa);padding:12px 8px;text-align:center}
+.stat span{display:block;font-size:14px;font-weight:600}.stat b{font-size:24px;color:var(--vino)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--vino2);color:var(--crema);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
+#toast.show{opacity:1}
+@media(max-width:520px){h1{font-size:46px}.stat b{font-size:17px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
-
-<div id="toast-container"></div>
-
-<header class="topbar">
-  <div class="topbar__brand">MINA<em>administración del emprendimiento</em></div>
-  <div class="topbar__fecha" id="fecha-hoy"></div>
+<header>
+  <h1>MINA</h1>
+  <nav><button class="on" data-tab="stock">Stock</button><button data-tab="ventas">Ventas</button><button data-tab="gastos">Gastos</button></nav>
 </header>
 
 <main>
-
-  <!-- ===================== PANEL ===================== -->
-  <section class="seccion activa" id="seccion-panel">
-    <h1 class="seccion__titulo">Panel</h1>
-    <p class="seccion__subtitulo">Así viene el emprendimiento en el período elegido</p>
-
-    <div class="filtros-fecha" id="filtros-panel"></div>
-    <div class="filtros-personalizado oculto" id="filtros-personalizado-panel">
-      <input type="date" id="panel-fecha-desde">
-      <input type="date" id="panel-fecha-hasta">
+  <section id="stock">
+    <div class="bar"><div class="chips" id="chips"></div><button class="solid" id="nuevaPrenda">+ Nueva prenda</button></div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <section id="ventas" hidden>
+    <div class="bar"><span></span><button class="solid" id="nuevaVenta">+ Nueva venta</button></div>
+    <div id="listaVentas"></div>
+  </section>
+  <section id="gastos" hidden>
+    <div class="stats">
+      <div class="stat"><span>Gastado</span><b id="stGastado">$0</b></div>
+      <div class="stat"><span>Vendido</span><b id="stVendido">$0</b></div>
+      <div class="stat"><span>Ganancia</span><b id="stGanancia">$0</b></div>
     </div>
-
-    <div class="grid-panel">
-      <div class="card-metrica card-metrica--ganancia card-metrica--ancha">
-        <div class="card-metrica__label">Ganancia neta</div>
-        <div class="card-metrica__valor" id="panel-ganancia">$0</div>
-      </div>
-      <div class="card-metrica card-metrica--ingreso">
-        <div class="card-metrica__label">Ingresos (ventas)</div>
-        <div class="card-metrica__valor" id="panel-ingresos">$0</div>
-      </div>
-      <div class="card-metrica card-metrica--egreso">
-        <div class="card-metrica__label">Egresos totales</div>
-        <div class="card-metrica__valor" id="panel-egresos">$0</div>
-      </div>
-      <div class="card-metrica">
-        <div class="card-metrica__label">Gastado en compras</div>
-        <div class="card-metrica__valor" id="panel-compras">$0</div>
-      </div>
-      <div class="card-metrica">
-        <div class="card-metrica__label">Gastos generales</div>
-        <div class="card-metrica__valor" id="panel-gastos">$0</div>
-      </div>
-      <div class="card-metrica">
-        <div class="card-metrica__label">Prendas vendidas</div>
-        <div class="card-metrica__valor" id="panel-cant-ventas">0</div>
-      </div>
-      <div class="card-metrica">
-        <div class="card-metrica__label">Dinero disponible</div>
-        <div class="card-metrica__valor" id="panel-disponible">$0</div>
-      </div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-card__titulo">Stock bajo</div>
-      <div class="lista" id="panel-stock-bajo"></div>
-    </div>
+    <div class="bar"><span></span><button class="solid" id="nuevoGasto">+ Nuevo gasto</button></div>
+    <div id="listaGastos"></div>
   </section>
-
-  <!-- ===================== VENTAS ===================== -->
-  <section class="seccion" id="seccion-ventas">
-    <h1 class="seccion__titulo">Ventas</h1>
-    <p class="seccion__subtitulo">Registrá cada venta y descontá stock automáticamente</p>
-
-    <form class="form-card" id="form-venta">
-      <div class="form-card__titulo">Nueva venta</div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Fecha</label>
-          <input type="date" id="venta-fecha" required>
-        </div>
-        <div class="campo">
-          <label>Medio de pago</label>
-          <select id="venta-medio-pago">
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="otro">Otro</option>
-          </select>
-        </div>
-      </div>
-      <div class="campo">
-        <label>Prenda vendida</label>
-        <select id="venta-prenda" required></select>
-      </div>
-      <div class="campo">
-        <label>Color</label>
-        <select id="venta-color" required></select>
-      </div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Cantidad</label>
-          <input type="number" id="venta-cantidad" min="1" value="1" required>
-        </div>
-        <div class="campo">
-          <label>Precio de venta (unidad)</label>
-          <input type="number" id="venta-precio" min="0" step="1" required>
-        </div>
-      </div>
-      <div class="campo">
-        <label>Costo de envío (opcional)</label>
-        <input type="number" id="venta-envio" min="0" step="1" value="0">
-      </div>
-      <div class="info-costo oculto" id="venta-info-ganancia"></div>
-      <button type="submit" class="btn btn--primario">Registrar venta</button>
-    </form>
-
-    <div class="lista" id="lista-ventas"></div>
-  </section>
-
-  <!-- ===================== GASTOS ===================== -->
-  <section class="seccion" id="seccion-gastos">
-    <h1 class="seccion__titulo">Gastos</h1>
-    <p class="seccion__subtitulo">Gastos generales del emprendimiento (no ligados a una prenda puntual)</p>
-
-    <form class="form-card" id="form-gasto">
-      <div class="form-card__titulo">Nuevo gasto</div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Fecha</label>
-          <input type="date" id="gasto-fecha" required>
-        </div>
-        <div class="campo">
-          <label>Categoría</label>
-          <select id="gasto-categoria">
-            <option value="packaging">Packaging</option>
-            <option value="etiquetas">Etiquetas / bolsas</option>
-            <option value="publicidad">Publicidad</option>
-            <option value="envios">Envíos</option>
-            <option value="insumos">Insumos</option>
-            <option value="servicios">Servicios</option>
-            <option value="otros">Otros</option>
-          </select>
-        </div>
-      </div>
-      <div class="campo">
-        <label>Descripción</label>
-        <input type="text" id="gasto-descripcion" placeholder="Ej: bolsas de papel x100" required>
-      </div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Monto</label>
-          <input type="number" id="gasto-monto" min="0" step="1" required>
-        </div>
-        <div class="campo">
-          <label>Medio de pago</label>
-          <select id="gasto-medio-pago">
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="otro">Otro</option>
-          </select>
-        </div>
-      </div>
-      <div class="campo">
-        <label>Observación (opcional)</label>
-        <input type="text" id="gasto-observacion">
-      </div>
-      <button type="submit" class="btn btn--primario">Registrar gasto</button>
-    </form>
-
-    <div class="lista" id="lista-gastos"></div>
-  </section>
-
-  <!-- ===================== COMPRAS / STOCK ===================== -->
-  <section class="seccion" id="seccion-compras">
-    <h1 class="seccion__titulo">Compras de mercadería</h1>
-    <p class="seccion__subtitulo">Cada compra suma stock automáticamente a la prenda elegida</p>
-
-    <form class="form-card" id="form-compra">
-      <div class="form-card__titulo">Nueva compra</div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Fecha</label>
-          <input type="date" id="compra-fecha" required>
-        </div>
-        <div class="campo">
-          <label>Proveedor</label>
-          <input type="text" id="compra-proveedor" placeholder="Opcional">
-        </div>
-      </div>
-      <div class="campo">
-        <label>Prenda</label>
-        <select id="compra-prenda" required></select>
-      </div>
-      <div class="campo">
-        <label>Color</label>
-        <input type="text" id="compra-color" list="compra-color-lista" placeholder="Ej: negro" required>
-        <datalist id="compra-color-lista"></datalist>
-      </div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Cantidad</label>
-          <input type="number" id="compra-cantidad" min="1" required>
-        </div>
-        <div class="campo">
-          <label>Costo total de la compra</label>
-          <input type="number" id="compra-costo-total" min="0" step="1" required>
-        </div>
-      </div>
-      <div class="info-costo oculto" id="compra-info-unitario"></div>
-      <div class="campo">
-        <label class="chk-linea">
-          <input type="checkbox" id="compra-pagado" checked>
-          Ya está pagada
-        </label>
-      </div>
-      <button type="submit" class="btn btn--primario">Registrar compra</button>
-    </form>
-
-    <div class="lista" id="lista-compras"></div>
-  </section>
-
-  <!-- ===================== PRENDAS ===================== -->
-  <section class="seccion" id="seccion-prendas">
-    <h1 class="seccion__titulo">Prendas</h1>
-    <p class="seccion__subtitulo">Estructura de costos, precio de venta y stock de cada producto</p>
-
-    <button class="btn btn--primario" id="btn-nueva-prenda" style="margin-bottom:16px;">+ Nueva prenda</button>
-
-    <div class="grid-prendas" id="grid-prendas"></div>
-  </section>
-
-  <!-- ===================== MOVIMIENTOS ===================== -->
-  <section class="seccion" id="seccion-movimientos">
-    <h1 class="seccion__titulo">Movimientos</h1>
-    <p class="seccion__subtitulo">Ventas, compras y gastos juntos, ordenados por fecha</p>
-
-    <div class="filtros-fecha" id="filtros-movimientos"></div>
-    <div class="filtros-personalizado oculto" id="filtros-personalizado-movimientos">
-      <input type="date" id="mov-fecha-desde">
-      <input type="date" id="mov-fecha-hasta">
-    </div>
-
-    <div class="lista" id="lista-movimientos"></div>
-  </section>
-
 </main>
 
-<!-- ===================== MODAL: FICHA DE PRENDA ===================== -->
-<div class="modal-fondo oculto" id="modal-prenda">
-  <div class="modal">
-    <div class="modal__cabecera">
-      <h2 id="modal-prenda-titulo">Nueva prenda</h2>
-      <button class="modal__cerrar" id="modal-prenda-cerrar">✕</button>
-    </div>
-    <form id="form-prenda">
-      <input type="hidden" id="prenda-id">
-      <div class="campo">
-        <label>Imagen</label>
-        <input type="file" id="prenda-imagen" accept="image/*">
-        <img id="prenda-imagen-preview" style="width:100%;border-radius:10px;margin-top:8px;display:none;">
-      </div>
-      <div class="campo">
-        <label>Nombre de la prenda</label>
-        <input type="text" id="prenda-nombre" placeholder="Ej: Remera oversize negra" required>
-      </div>
-      <div class="campo">
-        <label>Precio al que la compré (por unidad)</label>
-        <input type="number" id="prenda-precio-compra" min="0" step="1" required>
-      </div>
-      <div class="fila-2">
-        <div class="campo">
-          <label>Bolsa</label>
-          <input type="number" id="prenda-costo-bolsa" min="0" step="1" value="0">
-        </div>
-        <div class="campo">
-          <label>Etiqueta</label>
-          <input type="number" id="prenda-costo-etiqueta" min="0" step="1" value="0">
-        </div>
-      </div>
-      <div class="campo">
-        <label>Otros costos (packaging, etc.)</label>
-        <input type="number" id="prenda-costo-otros" min="0" step="1" value="0">
-      </div>
-      <div class="info-costo" id="prenda-info-costo">Costo total: <b>$0</b></div>
-      <div class="campo">
-        <label>Precio al que la voy a vender</label>
-        <input type="number" id="prenda-precio-venta" min="0" step="1" required>
-      </div>
-      <div class="info-costo" id="prenda-info-ganancia">Ganancia: <b>$0</b> · Margen: <b>0%</b></div>
-      <div class="campo">
-        <label>Colores y stock</label>
-        <div id="prenda-colores-container"></div>
-        <button type="button" class="btn btn--fantasma" id="btn-agregar-color">+ Agregar color</button>
-      </div>
-      <button type="submit" class="btn btn--primario">Guardar prenda</button>
-      <button type="button" class="btn btn--fantasma" id="btn-borrar-prenda" style="margin-top:8px;">Eliminar prenda</button>
-    </form>
-  </div>
-</div>
+<dialog id="dPrenda">
+  <form id="fPrenda">
+    <h2 id="tPrenda">Nueva prenda</h2>
+    <label>Nombre<input name="nombre" required></label>
+    <label>Categoría<input name="cat" list="listaCats" placeholder="Elegí una o escribí una nueva" required></label>
+    <datalist id="listaCats"></datalist>
+    <label>Precio<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <label>Foto<input name="foto" type="file" accept="image/*"></label>
+    <img id="prev" alt="" hidden>
+    <div class="sub">Colores y cantidad</div>
+    <div id="vars"></div>
+    <button type="button" class="ghost" id="addVar">+ Agregar color</button>
+    <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Guardar</button></div>
+  </form>
+</dialog>
 
-<nav class="bottomnav">
-  <button class="bottomnav__item activo" data-seccion="panel">
-    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg>
-    <span class="label">Panel</span>
-  </button>
-  <button class="bottomnav__item" data-seccion="ventas">
-    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.4 1.2-2.2 2.5-2.2s2.5.8 2.5 2c0 2.5-5 1.7-5 4.2 0 1.2 1.2 2 2.5 2s2.5-.8 2.5-2.2"/></svg>
-    <span class="label">Ventas</span>
-  </button>
-  <button class="bottomnav__item" data-seccion="gastos">
-    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>
-    <span class="label">Gastos</span>
-  </button>
-  <button class="bottomnav__item" data-seccion="compras">
-    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5z"/><path d="M3.5 8.5 12 13l8.5-4.5M12 13v9"/></svg>
-    <span class="label">Compras</span>
-  </button>
-  <button class="bottomnav__item" data-seccion="prendas">
-    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4 4 7.5 6.5 10 8 8.5V20h8V8.5l1.5 1.5L20 7.5 16 4c0 1.5-1.8 2.5-4 2.5S8 5.5 8 4Z"/></svg>
-    <span class="label">Prendas</span>
-  </button>
-  <button class="bottomnav__item" data-seccion="movimientos">
-    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-    <span class="label">Movim.</span>
-  </button>
-</nav>
+<dialog id="dVenta">
+  <form id="fVenta">
+    <h2>Nueva venta</h2>
+    <label>Prenda<select name="prenda" required></select></label>
+    <label>Color<select name="variante" required></select></label>
+    <label>Cantidad<input name="cant" type="number" min="1" value="1" required></label>
+    <label>Precio unitario<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <label>Fecha<input name="fecha" type="date" required></label>
+    <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Registrar venta</button></div>
+  </form>
+</dialog>
 
-<script type="module" src="js/app.js"></script>
+<dialog id="dGasto">
+  <form id="fGasto">
+    <h2>Nuevo gasto</h2>
+    <label>Descripción<input name="desc" placeholder="Ej: Bolsas, publicidad, mercadería" required></label>
+    <label>Monto<input name="monto" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <label>Fecha<input name="fecha" type="date" required></label>
+    <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Guardar gasto</button></div>
+  </form>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://uwrnfmoahtsbfurnsoti.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3cm5mbW9haHRzYmZ1cm5zb3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDc1MTQsImV4cCI6MjEwMzg4MzUxNH0.-cF5jrDxnKR1BXS_ixZzwm8LJHNAUJsiWPrBL1zAdEE';
+const BUCKET_PRENDAS = 'prendas';
+
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const money = n => (n < 0 ? '-$' : '$') + Math.abs(Number(n || 0)).toLocaleString('es-AR');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+
+let cats = [], prendas = [], ventas = [], gastos = [], filtro = 0, editing = null;
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+async function cargar() {
+  const [c, p, v, g] = await Promise.all([
+    db.from('categorias').select('*').order('nombre'),
+    db.from('prendas').select('*, variantes(*)').order('created_at', { ascending: false }),
+    db.from('ventas').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false }),
+    db.from('gastos').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false })
+  ]);
+  const err = c.error || p.error || v.error || g.error;
+  if (err) { toast('Error al cargar: ' + err.message); return; }
+  cats = c.data; prendas = p.data; ventas = v.data; gastos = g.data;
+  prendas.forEach(x => x.variantes.sort((a, b) => a.id - b.id));
+  render();
+}
+
+function render() { renderStock(); renderVentas(); renderGastos(); }
+
+function renderStock() {
+  $('#chips').innerHTML = [{ id: 0, nombre: 'Todas' }, ...cats].map(c =>
+    `<button class="chip ${c.id === filtro ? 'on' : ''}" data-cat="${c.id}">${esc(c.nombre)}</button>`).join('');
+  $('#listaCats').innerHTML = cats.map(c => `<option value="${esc(c.nombre)}">`).join('');
+  const lista = prendas.filter(p => !filtro || p.categoria_id === filtro);
+  if (!lista.length) { $('#grid').innerHTML = '<p class="vacio">Todavía no hay prendas acá. Tocá “+ Nueva prenda” para cargar la primera.</p>'; return; }
+  $('#grid').innerHTML = lista.map(p => {
+    const cat = cats.find(c => c.id === p.categoria_id)?.nombre || 'Sin categoría';
+    const total = p.variantes.reduce((s, v) => s + v.stock, 0);
+    return `<article class="card">
+      ${p.imagen_url ? `<img src="${esc(p.imagen_url)}" alt="${esc(p.nombre)}" loading="lazy">` : '<div class="noimg">MINA</div>'}
+      <div class="in">
+        <h3>${esc(p.nombre)}</h3><span class="cat">${esc(cat)} · ${total} en stock</span>
+        <span class="precio">${money(p.precio)}</span>
+        <div class="vars">${p.variantes.map(v => `<span class="v ${v.stock ? '' : 'cero'}">${esc(v.color)}: ${v.stock}</span>`).join('')}</div>
+        <div class="acts"><button class="ghost" data-edit="${p.id}">Editar</button><button class="ghost" data-del="${p.id}">Borrar</button></div>
+      </div></article>`;
+  }).join('');
+}
+
+function renderVentas() {
+  if (!ventas.length) { $('#listaVentas').innerHTML = '<p class="vacio">Todavía no registraste ventas. Tocá “+ Nueva venta”.</p>'; return; }
+  let dia = '', html = '';
+  for (const v of ventas) {
+    if (v.fecha !== dia) {
+      dia = v.fecha;
+      html += `<div class="dia">${new Date(dia + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>`;
+    }
+    html += `<div class="row"><div><b>${esc(v.prenda_nombre)}${v.color && v.color !== 'Único' ? ' · ' + esc(v.color) : ''}</b>
+      <small>${v.cantidad} × ${money(v.precio_unitario)}</small></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="tot">${money(v.cantidad * v.precio_unitario)}</span>
+      <button class="x" data-delv="${v.id}" aria-label="Borrar venta">×</button></div></div>`;
+  }
+  $('#listaVentas').innerHTML = html;
+}
+
+/* ---------- Gastos ---------- */
+function renderGastos() {
+  const gastado = gastos.reduce((s, g) => s + Number(g.monto), 0);
+  const vendido = ventas.reduce((s, v) => s + v.cantidad * Number(v.precio_unitario), 0);
+  $('#stGastado').textContent = money(gastado);
+  $('#stVendido').textContent = money(vendido);
+  $('#stGanancia').textContent = money(vendido - gastado);
+  if (!gastos.length) { $('#listaGastos').innerHTML = '<p class="vacio">Todavía no cargaste gastos. Tocá “+ Nuevo gasto”.</p>'; return; }
+  let dia = '', html = '';
+  for (const g of gastos) {
+    if (g.fecha !== dia) {
+      dia = g.fecha;
+      html += `<div class="dia">${new Date(dia + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>`;
+    }
+    html += `<div class="row"><b>${esc(g.descripcion)}</b>
+      <div style="display:flex;gap:10px;align-items:center"><span class="tot">${money(g.monto)}</span>
+      <button class="x" data-delg="${g.id}" aria-label="Borrar gasto">×</button></div></div>`;
+  }
+  $('#listaGastos').innerHTML = html;
+}
+
+$('#fGasto').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, btn = f.querySelector('.solid'); btn.disabled = true;
+  const r = await db.from('gastos').insert({ descripcion: f.desc.value.trim(), monto: +f.monto.value, fecha: f.fecha.value });
+  btn.disabled = false;
+  if (r.error) return toast('Error: ' + r.error.message);
+  $('#dGasto').close(); toast('Gasto guardado'); cargar();
+};
+
+/* ---------- Prendas ---------- */
+function filaVar(v = {}) {
+  const d = document.createElement('div'); d.className = 'vr'; d.dataset.id = v.id || '';
+  d.innerHTML = `<input class="vc" placeholder="Color (ej: Negro)" value="${esc(v.color === 'Único' ? '' : v.color || '')}">
+    <input class="vq" type="number" min="0" inputmode="numeric" placeholder="Cant." value="${v.stock ?? ''}">
+    <button type="button" class="x" aria-label="Quitar color">×</button>`;
+  $('#vars').append(d);
+}
+
+function abrirPrenda(p) {
+  editing = p || null;
+  const f = $('#fPrenda'); f.reset(); $('#vars').innerHTML = '';
+  $('#tPrenda').textContent = p ? 'Editar prenda' : 'Nueva prenda';
+  if (p) {
+    f.nombre.value = p.nombre; f.precio.value = p.precio;
+    f.cat.value = cats.find(c => c.id === p.categoria_id)?.nombre || '';
+    p.variantes.forEach(filaVar);
+  }
+  if (!$('#vars').children.length) filaVar();
+  $('#prev').hidden = !p?.imagen_url; if (p?.imagen_url) $('#prev').src = p.imagen_url;
+  $('#dPrenda').showModal();
+}
+
+$('#fPrenda').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, btn = f.querySelector('.solid'); btn.disabled = true;
+  try {
+    let url = editing?.imagen_url || null; const file = f.foto.files[0];
+    if (file) {
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${file.name.split('.').pop()}`;
+      const up = await db.storage.from(BUCKET_PRENDAS).upload(path, file); if (up.error) throw up.error;
+      url = db.storage.from(BUCKET_PRENDAS).getPublicUrl(path).data.publicUrl;
+    }
+    const nom = f.cat.value.trim();
+    let cat = cats.find(c => c.nombre.toLowerCase() === nom.toLowerCase());
+    if (!cat) { const r = await db.from('categorias').insert({ nombre: nom }).select().single(); if (r.error) throw r.error; cat = r.data; }
+    const row = { nombre: f.nombre.value.trim(), categoria_id: cat.id, precio: +f.precio.value, imagen_url: url };
+    let id = editing?.id;
+    if (id) { const r = await db.from('prendas').update(row).eq('id', id); if (r.error) throw r.error; }
+    else { const r = await db.from('prendas').insert(row).select().single(); if (r.error) throw r.error; id = r.data.id; }
+
+    const rows = [...document.querySelectorAll('.vr')].map(r => ({
+      id: +r.dataset.id || null, color: r.querySelector('.vc').value.trim() || 'Único', stock: +r.querySelector('.vq').value || 0 }));
+    const keep = rows.filter(r => r.id).map(r => r.id);
+    const borrar = (editing?.variantes || []).filter(v => !keep.includes(v.id)).map(v => v.id);
+    if (borrar.length) await db.from('variantes').delete().in('id', borrar);
+    for (const r of rows.filter(r => r.id)) await db.from('variantes').update({ color: r.color, stock: r.stock }).eq('id', r.id);
+    const nuevas = rows.filter(r => !r.id).map(r => ({ prenda_id: id, color: r.color, stock: r.stock }));
+    if (nuevas.length) { const r = await db.from('variantes').insert(nuevas); if (r.error) throw r.error; }
+
+    $('#dPrenda').close(); toast('Prenda guardada'); await cargar();
+  } catch (err) { toast('Error: ' + err.message); }
+  btn.disabled = false;
+};
+
+$('#fPrenda').foto.onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  $('#prev').src = URL.createObjectURL(file); $('#prev').hidden = false;
+};
+
+/* ---------- Ventas ---------- */
+function opcionesVariantes() {
+  const p = prendas.find(x => x.id === +$('#fVenta').prenda.value);
+  const f = $('#fVenta');
+  f.variante.innerHTML = (p?.variantes || []).filter(v => v.stock > 0)
+    .map(v => `<option value="${v.id}">${esc(v.color)} (${v.stock} en stock)</option>`).join('');
+  if (p) f.precio.value = p.precio;
+}
+
+function abrirVenta() {
+  const disp = prendas.filter(p => p.variantes.some(v => v.stock > 0));
+  if (!disp.length) { toast('No hay prendas con stock para vender'); return; }
+  const f = $('#fVenta'); f.reset();
+  f.prenda.innerHTML = disp.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('');
+  f.fecha.value = hoy(); opcionesVariantes();
+  $('#dVenta').showModal();
+}
+
+$('#fVenta').prenda.onchange = opcionesVariantes;
+
+$('#fVenta').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, btn = f.querySelector('.solid');
+  const p = prendas.find(x => x.id === +f.prenda.value);
+  const v = p?.variantes.find(x => x.id === +f.variante.value);
+  const cant = +f.cant.value;
+  if (!v) return toast('Elegí un color con stock');
+  if (cant > v.stock) return toast(`Solo quedan ${v.stock} en ese color`);
+  btn.disabled = true;
+  try {
+    const r = await db.from('ventas').insert({ fecha: f.fecha.value, prenda_id: p.id, variante_id: v.id,
+      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: +f.precio.value });
+    if (r.error) throw r.error;
+    const s = await db.from('variantes').update({ stock: v.stock - cant }).eq('id', v.id); if (s.error) throw s.error;
+    $('#dVenta').close(); toast('Venta registrada'); await cargar();
+  } catch (err) { toast('Error: ' + err.message); }
+  btn.disabled = false;
+};
+
+/* ---------- Eventos ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.tab) {
+    document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
+    ['stock', 'ventas', 'gastos'].forEach(id => $('#' + id).hidden = id !== t.dataset.tab);
+  }
+  if (t.dataset.cat !== undefined) { filtro = +t.dataset.cat; renderStock(); }
+  if (t.dataset.close !== undefined) t.closest('dialog').close();
+  if (t.dataset.edit) abrirPrenda(prendas.find(p => p.id === +t.dataset.edit));
+  if (t.dataset.del && confirm('¿Borrar esta prenda y su stock? Las ventas ya registradas se mantienen.')) {
+    const r = await db.from('prendas').delete().eq('id', +t.dataset.del);
+    r.error ? toast('Error: ' + r.error.message) : (toast('Prenda borrada'), cargar());
+  }
+  if (t.dataset.delv && confirm('¿Borrar esta venta? El stock vuelve a sumarse.')) {
+    const v = ventas.find(x => x.id === +t.dataset.delv);
+    if (v.variante_id) {
+      const cur = prendas.flatMap(p => p.variantes).find(x => x.id === v.variante_id);
+      if (cur) await db.from('variantes').update({ stock: cur.stock + v.cantidad }).eq('id', cur.id);
+    }
+    const r = await db.from('ventas').delete().eq('id', v.id);
+    r.error ? toast('Error: ' + r.error.message) : (toast('Venta borrada'), cargar());
+  }
+  if (t.dataset.delg && confirm('¿Borrar este gasto?')) {
+    const r = await db.from('gastos').delete().eq('id', +t.dataset.delg);
+    r.error ? toast('Error: ' + r.error.message) : (toast('Gasto borrado'), cargar());
+  }
+  if (t.classList.contains('x') && t.closest('.vr')) {
+    t.closest('.vr').remove(); if (!$('#vars').children.length) filaVar();
+  }
+});
+$('#nuevaPrenda').onclick = () => abrirPrenda();
+$('#nuevaVenta').onclick = abrirVenta;
+$('#nuevoGasto').onclick = () => { const f = $('#fGasto'); f.reset(); f.fecha.value = hoy(); $('#dGasto').showModal(); };
+$('#addVar').onclick = () => filaVar();
+
+cargar();
+</script>
 </body>
 </html>
