@@ -37,6 +37,8 @@ button:disabled{opacity:.5}
 .row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1.5px solid var(--vino);border-radius:var(--r);background:#fff;padding:12px 14px;margin-bottom:10px}
 .row b{display:block}.row small{opacity:.75}
 .row .tot{font-weight:700;font-size:18px;white-space:nowrap}
+.mini{width:52px;height:64px;border-radius:8px;border:1.5px solid var(--vino);object-fit:cover;background:var(--rosa);flex:none;display:grid;place-items:center;font-family:'Poiret One';font-size:15px;color:var(--vino)}
+.vinfo{display:flex;gap:12px;align-items:center;min-width:0}
 .dia{font-weight:700;margin:18px 0 8px;font-size:15px}
 .vacio{text-align:center;padding:50px 10px;opacity:.8}
 dialog{border:1.5px solid var(--vino);border-radius:16px;background:var(--crema);color:var(--vino2);width:min(440px,94vw);max-height:92vh;padding:0}
@@ -194,8 +196,10 @@ function renderVentas() {
       dia = v.fecha;
       html += `<div class="dia">${new Date(dia + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>`;
     }
-    html += `<div class="row"><div><b>${esc(v.prenda_nombre)}${v.color && v.color !== 'Único' ? ' · ' + esc(v.color) : ''}</b>
-      <small>${v.cantidad} × ${money(v.precio_unitario)}</small></div>
+    const img = prendas.find(p => p.id === v.prenda_id)?.imagen_url;
+    html += `<div class="row"><div class="vinfo">${img ? `<img class="mini" src="${esc(img)}" alt="" loading="lazy">` : '<div class="mini">MINA</div>'}
+      <div><b>${esc(v.prenda_nombre)}${v.color && v.color !== 'Único' ? ' · ' + esc(v.color) : ''}</b>
+      <small>${v.cantidad} × ${money(v.precio_unitario)}</small></div></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="tot">${money(v.cantidad * v.precio_unitario)}</span>
       <button class="x" data-delv="${v.id}" aria-label="Borrar venta">×</button></div></div>`;
   }
