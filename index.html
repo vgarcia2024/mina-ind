@@ -63,6 +63,8 @@ dialog .acts button{flex:1}
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .resumen{display:flex;justify-content:space-between;align-items:center;background:var(--rosa);border-radius:10px;padding:9px 12px;font-weight:600}
 .resumen b{font-size:18px;color:var(--vino)}
+label.resumen{flex-direction:row;font-size:14px}
+.resumen input{width:140px;text-align:right;font-weight:700;font-size:18px;color:var(--vino);padding:6px 10px}
 .ganancia{border:1.5px dashed var(--vino);border-radius:10px;padding:10px 12px;font-weight:600;text-align:center}
 .ganancia b{font-size:19px;color:var(--vino)}.ganancia small{font-size:12.5px;font-weight:600;opacity:.8}.ganancia.perdida{background:var(--rosa)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--vino2);color:var(--crema);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -128,7 +130,7 @@ dialog .acts button{flex:1}
     <label>Prenda<select name="prenda" required></select></label>
     <label>Color<select name="variante" required></select></label>
     <label>Cantidad<input name="cant" type="number" min="1" value="1" required></label>
-    <div class="resumen"><span>Precio unitario</span><b id="vPrecio">$0</b></div>
+    <label class="resumen">Precio unitario<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
     <label>Fecha<input name="fecha" type="date" required></label>
     <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Registrar venta</button></div>
   </form>
@@ -337,7 +339,7 @@ function opcionesVariantes() {
   const f = $('#fVenta');
   f.variante.innerHTML = (p?.variantes || []).filter(v => v.stock > 0)
     .map(v => `<option value="${v.id}">${esc(v.color)} (${v.stock} en stock)</option>`).join('');
-  $('#vPrecio').textContent = money(p?.precio);
+  if (p) f.precio.value = p.precio;
 }
 
 function abrirVenta() {
@@ -362,7 +364,7 @@ $('#fVenta').onsubmit = async e => {
   btn.disabled = true;
   try {
     const r = await db.from('ventas').insert({ fecha: f.fecha.value, prenda_id: p.id, variante_id: v.id,
-      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: Number(p.precio), costo_unitario: costoTotal(p) });
+      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: +f.precio.value, costo_unitario: costoTotal(p) });
     if (r.error) throw r.error;
     const s = await db.from('variantes').update({ stock: v.stock - cant }).eq('id', v.id); if (s.error) throw s.error;
     $('#dVenta').close(); toast('Venta registrada'); await cargar();
