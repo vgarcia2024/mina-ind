@@ -46,7 +46,9 @@ dialog::backdrop{background:rgba(122,55,60,.45)}
 @keyframes entra{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes velo{from{opacity:0}to{opacity:1}}
 dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
-dialog h2{font-family:'Poiret One';font-size:30px;font-weight:400;letter-spacing:.08em;color:var(--vino)}
+.cerrar{position:sticky;top:0;z-index:2;align-self:flex-end;flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--vino);background:var(--crema);color:var(--vino);font:400 24px/1 Quicksand;cursor:pointer;margin:-8px -8px -50px 0}
+.cerrar:hover{background:var(--rosa)}
+dialog h2{padding-right:44px;font-family:'Poiret One';font-size:30px;font-weight:400;letter-spacing:.08em;color:var(--vino)}
 label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
 input,select{font:500 16px Quicksand;border:1.5px solid var(--vino);border-radius:10px;padding:9px 11px;background:#fff;color:var(--vino2);width:100%}
 .sub{font-weight:700;font-size:14px}
@@ -104,6 +106,7 @@ label.resumen{flex-direction:row;font-size:14px}
 
 <dialog id="dPrenda">
   <form id="fPrenda">
+    <button type="button" class="cerrar" data-close aria-label="Cerrar">×</button>
     <h2 id="tPrenda">Nueva prenda</h2>
     <label>Nombre<input name="nombre" required></label>
     <label>Precio de costo<input name="costo" type="number" min="0" step="any" inputmode="decimal" required></label>
@@ -126,6 +129,7 @@ label.resumen{flex-direction:row;font-size:14px}
 
 <dialog id="dVenta">
   <form id="fVenta">
+    <button type="button" class="cerrar" data-close aria-label="Cerrar">×</button>
     <h2>Nueva venta</h2>
     <label>Prenda<select name="prenda" required></select></label>
     <label>Color<select name="variante" required></select></label>
@@ -138,6 +142,7 @@ label.resumen{flex-direction:row;font-size:14px}
 
 <dialog id="dGasto">
   <form id="fGasto">
+    <button type="button" class="cerrar" data-close aria-label="Cerrar">×</button>
     <h2>Nuevo gasto</h2>
     <label>Descripción<input name="desc" placeholder="Ej: Bolsas, publicidad, mercadería" required></label>
     <label>Monto<input name="monto" type="number" min="0" step="any" inputmode="decimal" required></label>
