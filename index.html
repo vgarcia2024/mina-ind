@@ -57,6 +57,10 @@ dialog .acts button{flex:1}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
 .stat{border:1.5px solid var(--vino);border-radius:var(--r);background:var(--rosa);padding:12px 8px;text-align:center}
 .stat span{display:block;font-size:14px;font-weight:600}.stat b{font-size:24px;color:var(--vino)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.resumen{display:flex;justify-content:space-between;align-items:center;background:var(--rosa);border-radius:10px;padding:9px 12px;font-weight:600}
+.resumen b{font-size:18px;color:var(--vino)}
+.hint{font-size:12.5px;opacity:.75;margin-top:-6px}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--vino2);color:var(--crema);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 #toast.show{opacity:1}
 @media(max-width:520px){h1{font-size:46px}.stat b{font-size:17px}}
@@ -93,7 +97,16 @@ dialog .acts button{flex:1}
   <form id="fPrenda">
     <h2 id="tPrenda">Nueva prenda</h2>
     <label>Nombre<input name="nombre" required></label>
-    <label>Precio<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <label>Precio de costo<input name="costo" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <div class="trio">
+      <label>Etiqueta<input name="etiqueta" type="number" min="0" step="any" inputmode="decimal" placeholder="0"></label>
+      <label>Bolsa<input name="bolsa" type="number" min="0" step="any" inputmode="decimal" placeholder="0"></label>
+      <label>Otros gastos<input name="otros" type="number" min="0" step="any" inputmode="decimal" placeholder="0"></label>
+    </div>
+    <div class="resumen"><span>Costo total</span><b id="costoTotal">$0</b></div>
+    <label>Ganancia que querés (%)<input name="margen" type="number" min="0" step="any" inputmode="decimal" value="100"></label>
+    <label>Precio de venta recomendado<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <small class="hint">Se calcula solo: costo total + ganancia %, redondeado a $100. Si querés, lo cambiás a mano.</small>
     <label>Foto<input name="foto" type="file" accept="image/*"></label>
     <img id="prev" alt="" hidden>
     <div class="sub">Colores y cantidad</div>
@@ -109,7 +122,7 @@ dialog .acts button{flex:1}
     <label>Prenda<select name="prenda" required></select></label>
     <label>Color<select name="variante" required></select></label>
     <label>Cantidad<input name="cant" type="number" min="1" value="1" required></label>
-    <label>Precio unitario<input name="precio" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <div class="resumen"><span>Precio unitario</span><b id="vPrecio">$0</b></div>
     <label>Fecha<input name="fecha" type="date" required></label>
     <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Registrar venta</button></div>
   </form>
@@ -235,15 +248,33 @@ function filaVar(v = {}) {
   $('#vars').append(d);
 }
 
+const num = n => +n || 0;
+function calcPrecio() {
+  const f = $('#fPrenda');
+  const total = num(f.costo.value) + num(f.etiqueta.value) + num(f.bolsa.value) + num(f.otros.value);
+  $('#costoTotal').textContent = money(total);
+  const sugerido = total ? Math.ceil(total * (1 + num(f.margen.value) / 100) / 100) * 100 : '';
+  if (!f.precio.dataset.manual) f.precio.value = sugerido;
+  return sugerido;
+}
+$('#fPrenda').addEventListener('input', e => {
+  if (e.target.name === 'precio') { e.target.dataset.manual = '1'; return; }
+  if (['costo', 'etiqueta', 'bolsa', 'otros', 'margen'].includes(e.target.name)) calcPrecio();
+});
+
 function abrirPrenda(p) {
   editing = p || null;
-  const f = $('#fPrenda'); f.reset(); $('#vars').innerHTML = '';
+  const f = $('#fPrenda'); f.reset(); delete f.precio.dataset.manual; $('#vars').innerHTML = '';
   $('#tPrenda').textContent = p ? 'Editar prenda' : 'Nueva prenda';
   if (p) {
-    f.nombre.value = p.nombre; f.precio.value = p.precio;
+    f.nombre.value = p.nombre;
+    f.costo.value = p.costo || ''; f.etiqueta.value = p.etiqueta || ''; f.bolsa.value = p.bolsa || ''; f.otros.value = p.otros || '';
+    f.margen.value = p.margen ?? 100;
+    if (calcPrecio() !== Number(p.precio)) { f.precio.dataset.manual = '1'; f.precio.value = p.precio; }
     p.variantes.forEach(filaVar);
   }
   if (!$('#vars').children.length) filaVar();
+  calcPrecio();
   $('#prev').hidden = !p?.imagen_url; if (p?.imagen_url) $('#prev').src = p.imagen_url;
   $('#dPrenda').showModal();
 }
@@ -258,7 +289,8 @@ $('#fPrenda').onsubmit = async e => {
       const up = await db.storage.from(BUCKET_PRENDAS).upload(path, file); if (up.error) throw up.error;
       url = db.storage.from(BUCKET_PRENDAS).getPublicUrl(path).data.publicUrl;
     }
-    const row = { nombre: f.nombre.value.trim(), precio: +f.precio.value, imagen_url: url };
+    const row = { nombre: f.nombre.value.trim(), costo: num(f.costo.value), etiqueta: num(f.etiqueta.value), bolsa: num(f.bolsa.value),
+      otros: num(f.otros.value), margen: num(f.margen.value), precio: +f.precio.value, imagen_url: url };
     let id = editing?.id;
     if (id) { const r = await db.from('prendas').update(row).eq('id', id); if (r.error) throw r.error; }
     else { const r = await db.from('prendas').insert(row).select().single(); if (r.error) throw r.error; id = r.data.id; }
@@ -288,7 +320,7 @@ function opcionesVariantes() {
   const f = $('#fVenta');
   f.variante.innerHTML = (p?.variantes || []).filter(v => v.stock > 0)
     .map(v => `<option value="${v.id}">${esc(v.color)} (${v.stock} en stock)</option>`).join('');
-  if (p) f.precio.value = p.precio;
+  $('#vPrecio').textContent = money(p?.precio);
 }
 
 function abrirVenta() {
@@ -313,7 +345,7 @@ $('#fVenta').onsubmit = async e => {
   btn.disabled = true;
   try {
     const r = await db.from('ventas').insert({ fecha: f.fecha.value, prenda_id: p.id, variante_id: v.id,
-      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: +f.precio.value });
+      prenda_nombre: p.nombre, color: v.color, cantidad: cant, precio_unitario: Number(p.precio) });
     if (r.error) throw r.error;
     const s = await db.from('variantes').update({ stock: v.stock - cant }).eq('id', v.id); if (s.error) throw s.error;
     $('#dVenta').close(); toast('Venta registrada'); await cargar();
