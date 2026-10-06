@@ -74,8 +74,8 @@ label.resumen{flex-direction:row;font-size:14px}
 @media(max-width:520px){
   header{padding:22px 10px 0}
   h1{font-size:44px}
-  nav{gap:4px;margin-top:16px}
-  nav button{font-size:13px;padding:10px 2px;border-radius:10px 10px 0 0}
+  nav{gap:3px;margin-top:16px}
+  nav button{font-size:11.5px;padding:10px 1px;border-radius:10px 10px 0 0}
   main{padding:16px 12px 80px}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .card .in{padding:10px;gap:5px}
@@ -94,7 +94,7 @@ label.resumen{flex-direction:row;font-size:14px}
 <body>
 <header>
   <h1>MINA</h1>
-  <nav><button class="on" data-tab="stock">Stock</button><button data-tab="ventas">Ventas</button><button data-tab="gastos">Gastos</button><button data-tab="estadisticas">Estadísticas</button></nav>
+  <nav><button class="on" data-tab="stock">Stock</button><button data-tab="ventas">Ventas</button><button data-tab="gastos">Gastos Mina</button><button data-tab="propios">Propios</button><button data-tab="estadisticas">Estadísticas</button></nav>
 </header>
 
 <main>
@@ -107,14 +107,20 @@ label.resumen{flex-direction:row;font-size:14px}
     <div id="listaVentas"></div>
   </section>
   <section id="gastos" hidden>
-    <div class="bar"><span></span><button class="solid" id="nuevoGasto">+ Nuevo gasto</button></div>
+    <div class="bar"><span></span><button class="solid" id="nuevoGasto">+ Nuevo gasto Mina</button></div>
     <div id="listaGastos"></div>
+  </section>
+  <section id="propios" hidden>
+    <div class="bar"><span></span><button class="solid" id="nuevoPropio">+ Nuevo gasto propio</button></div>
+    <div id="listaPropios"></div>
   </section>
   <section id="estadisticas" hidden>
     <div class="stats">
-      <div class="stat"><span>Gastado</span><b id="stGastado">$0</b></div>
+      <div class="stat"><span>Gastos Mina</span><b id="stGastosMina">$0</b></div>
+      <div class="stat"><span>Gastos propios</span><b id="stGastosPropios">$0</b></div>
+      <div class="stat"><span>Gastado total</span><b id="stGastado">$0</b><small>Mina + propios</small></div>
       <div class="stat"><span>Vendido</span><b id="stVendido">$0</b></div>
-      <div class="stat"><span>Ganancia</span><b id="stGanancia">$0</b><small>Vendido − Gastado</small></div>
+      <div class="stat"><span>Ganancia</span><b id="stGanancia">$0</b><small>Vendido − Gastado total</small></div>
       <div class="stat real"><span>Ganancia real</span><b id="stReal">$0</b><small>Suma de lo que ganaste en cada prenda vendida (precio de venta − costo total)</small></div>
     </div>
   </section>
@@ -159,8 +165,19 @@ label.resumen{flex-direction:row;font-size:14px}
 <dialog id="dGasto">
   <form id="fGasto">
     <button type="button" class="cerrar" data-close aria-label="Cerrar">×</button>
-    <h2>Nuevo gasto</h2>
+    <h2>Nuevo gasto Mina</h2>
     <label>Descripción<input name="desc" placeholder="Ej: Bolsas, publicidad, mercadería" required></label>
+    <label>Monto<input name="monto" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <label>Fecha<input name="fecha" type="date" required></label>
+    <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Guardar gasto</button></div>
+  </form>
+</dialog>
+
+<dialog id="dPropio">
+  <form id="fPropio">
+    <button type="button" class="cerrar" data-close aria-label="Cerrar">×</button>
+    <h2>Nuevo gasto propio</h2>
+    <label>Descripción<input name="desc" placeholder="Ej: Salida, ropa, comida" required></label>
     <label>Monto<input name="monto" type="number" min="0" step="any" inputmode="decimal" required></label>
     <label>Fecha<input name="fecha" type="date" required></label>
     <div class="acts"><button type="button" class="ghost" data-close>Cancelar</button><button class="solid">Guardar gasto</button></div>
@@ -182,7 +199,7 @@ const money = n => (n < 0 ? '-$' : '$') + Math.abs(Number(n || 0)).toLocaleStrin
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 
-let prendas = [], ventas = [], gastos = [], editing = null;
+let prendas = [], ventas = [], gastos = [], propios = [], editing = null;
 
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -190,14 +207,15 @@ function toast(msg) {
 }
 
 async function cargar() {
-  const [p, v, g] = await Promise.all([
+  const [p, v, g, gp] = await Promise.all([
     db.from('prendas').select('*, variantes(*)').order('created_at', { ascending: false }),
     db.from('ventas').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false }),
-    db.from('gastos').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false })
+    db.from('gastos').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false }),
+    db.from('gastos_propios').select('*').order('fecha', { ascending: false }).order('created_at', { ascending: false })
   ]);
-  const err = p.error || v.error || g.error;
+  const err = p.error || v.error || g.error || gp.error;
   if (err) { toast('Error al cargar: ' + err.message); return; }
-  prendas = p.data; ventas = v.data; gastos = g.data;
+  prendas = p.data; ventas = v.data; gastos = g.data; propios = gp.data;
   prendas.forEach(x => x.variantes.sort((a, b) => a.id - b.id));
   render();
 }
@@ -208,11 +226,15 @@ function gananciaVenta(v) {
   const c = v.costo_unitario != null ? Number(v.costo_unitario) : costoTotal(prendas.find(p => p.id === v.prenda_id));
   return v.cantidad * (Number(v.precio_unitario) - c);
 }
-function render() { renderStock(); renderVentas(); renderGastos(); renderEstadisticas(); }
+function render() { renderStock(); renderVentas(); renderGastos(); renderPropios(); renderEstadisticas(); }
 
 function renderEstadisticas() {
-  const gastado = gastos.reduce((s, g) => s + Number(g.monto), 0);
+  const gMina = gastos.reduce((s, g) => s + Number(g.monto), 0);
+  const gPropios = propios.reduce((s, g) => s + Number(g.monto), 0);
+  const gastado = gMina + gPropios;
   const vendido = ventas.reduce((s, v) => s + v.cantidad * Number(v.precio_unitario), 0);
+  $('#stGastosMina').textContent = money(gMina);
+  $('#stGastosPropios').textContent = money(gPropios);
   $('#stGastado').textContent = money(gastado);
   $('#stVendido').textContent = money(vendido);
   $('#stGanancia').textContent = money(vendido - gastado);
@@ -253,9 +275,9 @@ function renderVentas() {
   $('#listaVentas').innerHTML = html;
 }
 
-/* ---------- Gastos ---------- */
+/* ---------- Gastos Mina ---------- */
 function renderGastos() {
-  if (!gastos.length) { $('#listaGastos').innerHTML = '<p class="vacio">Todavía no cargaste gastos. Tocá “+ Nuevo gasto”.</p>'; return; }
+  if (!gastos.length) { $('#listaGastos').innerHTML = '<p class="vacio">Todavía no cargaste gastos. Tocá “+ Nuevo gasto Mina”.</p>'; return; }
   let dia = '', html = '';
   for (const g of gastos) {
     if (g.fecha !== dia) {
@@ -276,6 +298,31 @@ $('#fGasto').onsubmit = async e => {
   btn.disabled = false;
   if (r.error) return toast('Error: ' + r.error.message);
   $('#dGasto').close(); toast('Gasto guardado'); cargar();
+};
+
+/* ---------- Gastos propios ---------- */
+function renderPropios() {
+  if (!propios.length) { $('#listaPropios').innerHTML = '<p class="vacio">Todavía no cargaste gastos propios. Tocá “+ Nuevo gasto propio”.</p>'; return; }
+  let dia = '', html = '';
+  for (const g of propios) {
+    if (g.fecha !== dia) {
+      dia = g.fecha;
+      html += `<div class="dia">${new Date(dia + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>`;
+    }
+    html += `<div class="row"><b>${esc(g.descripcion)}</b>
+      <div style="display:flex;gap:10px;align-items:center"><span class="tot">${money(g.monto)}</span>
+      <button class="x" data-delp="${g.id}" aria-label="Borrar gasto propio">×</button></div></div>`;
+  }
+  $('#listaPropios').innerHTML = html;
+}
+
+$('#fPropio').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, btn = f.querySelector('.solid'); btn.disabled = true;
+  const r = await db.from('gastos_propios').insert({ descripcion: f.desc.value.trim(), monto: +f.monto.value, fecha: f.fecha.value });
+  btn.disabled = false;
+  if (r.error) return toast('Error: ' + r.error.message);
+  $('#dPropio').close(); toast('Gasto propio guardado'); cargar();
 };
 
 /* ---------- Prendas ---------- */
@@ -398,7 +445,7 @@ document.addEventListener('click', async e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.tab) {
     document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
-    ['stock', 'ventas', 'gastos', 'estadisticas'].forEach(id => $('#' + id).hidden = id !== t.dataset.tab);
+    ['stock', 'ventas', 'gastos', 'propios', 'estadisticas'].forEach(id => $('#' + id).hidden = id !== t.dataset.tab);
   }
   if (t.dataset.close !== undefined) t.closest('dialog').close();
   if (t.dataset.edit) abrirPrenda(prendas.find(p => p.id === +t.dataset.edit));
@@ -419,6 +466,10 @@ document.addEventListener('click', async e => {
     const r = await db.from('gastos').delete().eq('id', +t.dataset.delg);
     r.error ? toast('Error: ' + r.error.message) : (toast('Gasto borrado'), cargar());
   }
+  if (t.dataset.delp && confirm('¿Borrar este gasto propio?')) {
+    const r = await db.from('gastos_propios').delete().eq('id', +t.dataset.delp);
+    r.error ? toast('Error: ' + r.error.message) : (toast('Gasto propio borrado'), cargar());
+  }
   if (t.classList.contains('x') && t.closest('.vr')) {
     t.closest('.vr').remove(); if (!$('#vars').children.length) filaVar();
   }
@@ -426,6 +477,7 @@ document.addEventListener('click', async e => {
 $('#nuevaPrenda').onclick = () => abrirPrenda();
 $('#nuevaVenta').onclick = abrirVenta;
 $('#nuevoGasto').onclick = () => { const f = $('#fGasto'); f.reset(); f.fecha.value = hoy(); $('#dGasto').showModal(); };
+$('#nuevoPropio').onclick = () => { const f = $('#fPropio'); f.reset(); f.fecha.value = hoy(); $('#dPropio').showModal(); };
 $('#addVar').onclick = () => filaVar();
 
 cargar();
